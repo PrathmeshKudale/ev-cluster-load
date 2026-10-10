@@ -1,7 +1,9 @@
 name: ci
 on: [push, pull_request]
+
 jobs:
-  test:
+  migration-and-test:
+    name: Database Migrations & Test Suite
     runs-on: ubuntu-latest
     services:
       db:
@@ -17,18 +19,39 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
-    defaults: {run: {working-directory: backend}}
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/evcluster
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.11"}
-      - run: pip install -r requirements-dev.txt
-      - run: alembic upgrade head
-        env:
-          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/evcluster
-      - run: python -m app.db.seed
-        env:
-          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/evcluster
-      - run: python -m pytest -q
-        env:
-          DATABASE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/evcluster
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      # Step 1: Apply migrations to blank database
+      - name: Apply migrations to blank database
+        run: alembic upgrade head
+
+      # Step 2: Test reversible downgrade
+      - name: Test reversible downgrade to base
+        run: alembic downgrade base
+
+      # Step 3: Re-apply migrations to clean database
+      - name: Re-apply migrations to clean database
+        run: alembic upgrade head
+
+      # Step 4: Seed the database
+      - name: Populate deterministic seed data
+        run: python -m app.db.seed
+
+      # Step 5: Apply migrations to seeded database
+      - name: Re-apply migrations to seeded database
+        run: alembic upgrade head
+
+      # Step 6: Run full pytest suite against live TimescaleDB instance
+      - name: Run test suite
+        run: python -m pytest -v

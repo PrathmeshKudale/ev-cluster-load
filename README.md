@@ -21,6 +21,7 @@ The data architecture is split into three schemas:
 Documentation:
 - [Database Schema & ER Diagram](docs/db/schema.md)
 - [Data Modeling & Layers](docs/db/modeling.md)
+- [Database Migrations & Lifecycle](docs/db/migrations.md)
 
 ## Run
 
