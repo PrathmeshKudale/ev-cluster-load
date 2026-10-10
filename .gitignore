@@ -7,4 +7,6 @@ node_modules/
 data/raw/
 data/processed/
 backend/data/
+*.db
+mlruns/
 .DS_Store

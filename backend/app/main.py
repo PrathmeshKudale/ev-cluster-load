@@ -20,25 +20,9 @@ MODES = {"fastest": (0.60, 0.15, 0.10, 0.15), "balanced": (0.35, 0.20, 0.25, 0.2
 DELAY_W = 0.20
 
 
-def _profile(h):
-    return 0.12 + 0.55 * np.exp(-((h - 18) ** 2) / 8) + 0.30 * np.exp(-((h - 9) ** 2) / 6)
+from app.ml.forecast import compute_forecasts
 
-
-def _history(days=21, seed=7):  # PLACEHOLDER: replace with ACN-Data / UrbanEV
-    rng = np.random.default_rng(seed)
-    h = np.arange(24)
-    return {s["id"]: np.clip(np.clip(_profile(h) * s["pop"], 0, 1) * rng.normal(1, 0.18, (days, 24)), 0, 1)
-            for s in STATIONS}
-
-
-def _bands(a):  # P10, P50, P90 per hour of day; swap for LightGBM quantile models
-    return np.percentile(a, [10, 50, 90], axis=0)
-
-
-HIST = _history()
-CAP = {s["id"]: s["chargers"] * s["kw"] for s in STATIONS}
-CLUSTER_PCT = _bands(sum(HIST[i] * CAP[i] for i in CAP) / PF / TRANSFORMER_KVA)  # joint, not summed quantiles
-STATION_UTIL = {i: _bands(HIST[i]) for i in HIST}
+CLUSTER_PCT, STATION_UTIL, MODEL_VERSION = compute_forecasts(STATIONS, TRANSFORMER_KVA, PF)
 
 
 def erlang_c_wait_min(c, util):

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/m3-lightgbm
+- Feature engineering pipeline in `backend/app/ml/features.py`:
+  - Temporal features: hour of day, day of week, weekend/holiday indicator.
+  - Weather features: ambient temperature and rain precipitation.
+  - Lag features: active load at 1h, 24h, and 168h (1 week).
+  - Rolling windows: 4-hour and 24-hour moving averages.
+  - Operational features: chargers available and concurrent active sessions.
+- Multi-quantile LightGBM training (`backend/app/ml/train.py`):
+  - Trained quantile regressors for P10, P50, and P90 with pinball loss objectives.
+  - Asymmetric split-conformal calibration on held-out validation set to guarantee empirical coverage reaches $\ge 80\%$ on out-of-sample data.
+  - Local MLflow experiment tracking logging parameters, metrics, and serialized model artifacts.
+  - Out-of-sample rolling backtest comparing against Seasonal Naive baseline, achieving **67.8% MAE improvement** and **82.9% P10–P90 empirical coverage** recorded in `results/backtest.csv`.
+- Integrated forecast module (`backend/app/ml/forecast.py`) replacing synthetic hour-of-day percentile bands in `backend/app/main.py`:
+  - Retains identical shape `(3, 24)` and non-negativity/monotonicity constraints.
+  - Automatically falls back to Seasonal Naive if model artifact is unavailable.
+- Added `make train` target in root `Makefile`.
+- Added unit and regression tests in `backend/tests/test_forecast.py`.
+
 ### Added - feat/m1-ingest
 - Ingestion adapters under `backend/app/ml/data/`:
   - `acn_adapter`: ACN-Data API fetch with `.env` token support, fallback to deterministic synthetic sessions, SHA-256 user ID anonymization, and splitting of a single site into 4 virtual stations (`is_synthetic = True`).

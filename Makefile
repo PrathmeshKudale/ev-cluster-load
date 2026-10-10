@@ -1,4 +1,4 @@
-.PHONY: test seed migrate migrate-down migrate-check ingest up down lint
+.PHONY: test seed migrate migrate-down migrate-check ingest train up down lint
 
 test:
 	cd backend && python -m pytest -q
@@ -17,6 +17,9 @@ migrate-check:
 
 ingest:
 	cd backend && python -m app.ml.data.ingest
+
+train:
+	cd backend && python -m app.ml.train
 
 up:
 	docker compose up --build

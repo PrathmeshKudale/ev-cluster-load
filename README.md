@@ -38,10 +38,11 @@ Then open http://localhost:8000 for the dashboard and http://localhost:8000/docs
 python -m venv .venv && source .venv/bin/activate
 pip install -r backend/requirements-dev.txt
 
-# Run migrations, seed, and data ingestion
+# Run migrations, seed, data ingestion, and model training
 make migrate
 make seed
 make ingest
+make train
 
 # Run test suite
 make test
