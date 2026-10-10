@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/m1-ingest
+- Ingestion adapters under `backend/app/ml/data/`:
+  - `acn_adapter`: ACN-Data API fetch with `.env` token support, fallback to deterministic synthetic sessions, SHA-256 user ID anonymization, and splitting of a single site into 4 virtual stations (`is_synthetic = True`).
+  - `urban_ev_adapter`: UrbanEV fast-charging session adapter with synthetic fallback.
+  - `weather_adapter`: Open-Meteo hourly weather client (zero API key needed) with diurnal offline fallback.
+  - `aggregator`: Hourly station load aggregation computing active kW, active chargers, and utilization rate with missing hours detection and coverage reporting.
+  - `copy_loader`: Fast PostgreSQL bulk `COPY FROM STDIN` loader with offline CSV buffer fallback.
+  - `eda`: Exploratory data analysis plotting generating `hourly_load_profiles.png`, `session_duration_energy.png`, and `weather_correlation.png` into `docs/img/`.
+  - `ingest`: Orchestrator runner with CLI reporting table for station coverage and row counts (`make ingest`).
+- Added `make ingest` target to root `Makefile`.
+- Added unit and integration test suite `backend/tests/test_ingest.py`.
+
 ### Added - feat/d9-migrations
 - Explicit Alembic and SQLAlchemy constraint naming conventions (`ix_`, `uq_`, `ck_`, `fk_`, `pk_`).
 - Timestamped Alembic revision file naming template.

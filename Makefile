@@ -1,4 +1,4 @@
-.PHONY: test seed migrate migrate-down migrate-check up down lint
+.PHONY: test seed migrate migrate-down migrate-check ingest up down lint
 
 test:
 	cd backend && python -m pytest -q
@@ -14,6 +14,9 @@ migrate-down:
 
 migrate-check:
 	cd backend && alembic check
+
+ingest:
+	cd backend && python -m app.ml.data.ingest
 
 up:
 	docker compose up --build
