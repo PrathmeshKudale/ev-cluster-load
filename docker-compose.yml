@@ -1,4 +1,31 @@
 services:
+  db:
+    image: timescale/timescaledb-ha:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: evcluster
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/home/postgres/pgdata/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d evcluster"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
-    ports: ["8000:8000"]
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/evcluster
+
+volumes:
+  pgdata:
