@@ -423,3 +423,5 @@ export const ComponentsPage: React.FC = () => {
     </div>
   )
 }
+
+export default ComponentsPage

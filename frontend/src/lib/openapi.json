@@ -1,0 +1,1427 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EV Cluster Load API",
+    "description": "AI-based EV cluster load prediction and smart charging recommendation system.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Log in with username and password",
+        "description": "Authenticate credentials with Argon2 and receive short-lived access and refresh tokens.",
+        "operationId": "login_api_v1_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Refresh access token",
+        "description": "Issue a new access and refresh token pair using an active refresh token.",
+        "operationId": "refresh_session_api_v1_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get current user profile",
+        "description": "Retrieve identity and roles for the authenticated token.",
+        "operationId": "get_me_api_v1_auth_me_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clusters": {
+      "get": {
+        "tags": [
+          "Clusters"
+        ],
+        "summary": "Get cluster topology and transformer parameters",
+        "description": "Retrieve electrical parameters, transformer rating, and connected stations for the cluster.",
+        "operationId": "get_clusters_api_v1_clusters_get",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClusterResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/clusters/{id}": {
+      "get": {
+        "tags": [
+          "Clusters"
+        ],
+        "summary": "Get specific cluster by identifier with RBAC scoping",
+        "description": "Retrieve cluster by ID, enforcing operator cluster boundary.",
+        "operationId": "get_cluster_by_id_api_v1_clusters__id__get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Cluster identifier",
+              "examples": [
+                "C1"
+              ],
+              "title": "Id"
+            },
+            "description": "Cluster identifier"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClusterResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stations": {
+      "get": {
+        "tags": [
+          "Stations"
+        ],
+        "summary": "List charging stations in the cluster",
+        "description": "Retrieve paginated list of charging stations connected to the cluster.",
+        "operationId": "list_stations_api_v1_stations_get",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Page number (1-indexed)",
+              "default": 1,
+              "title": "Page"
+            },
+            "description": "Page number (1-indexed)"
+          },
+          {
+            "name": "page_size",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "description": "Items per page",
+              "default": 10,
+              "title": "Page Size"
+            },
+            "description": "Items per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse_StationSchema_"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/forecast": {
+      "get": {
+        "tags": [
+          "Forecast"
+        ],
+        "summary": "Get 24-hour calibrated quantile load forecast",
+        "description": "Retrieve 24-hour P10, P50, and P90 calibrated cluster load forecasts.",
+        "operationId": "get_forecast_api_v1_forecast_get",
+        "parameters": [
+          {
+            "name": "start_hour",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 23,
+              "minimum": 0,
+              "description": "Starting hour of day for forecast (0-23)",
+              "default": 14,
+              "title": "Start Hour"
+            },
+            "description": "Starting hour of day for forecast (0-23)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transformer/{id}/risk": {
+      "get": {
+        "tags": [
+          "Transformer"
+        ],
+        "summary": "Get transformer risk assessment and early warning alerts",
+        "description": "Monitor transformer load risk, warning (80%) and critical (90%) thresholds, and peak hours.",
+        "operationId": "get_transformer_risk_api_v1_transformer__id__risk_get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Transformer identifier",
+              "examples": [
+                "T1"
+              ],
+              "title": "Id"
+            },
+            "description": "Transformer identifier"
+          },
+          {
+            "name": "start_hour",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 23,
+              "minimum": 0,
+              "description": "Starting hour of day",
+              "default": 14,
+              "title": "Start Hour"
+            },
+            "description": "Starting hour of day"
+          },
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransformerRiskResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/metrics/simulation": {
+      "get": {
+        "tags": [
+          "Simulation"
+        ],
+        "summary": "Get measured simulation benchmark metrics comparing FCFS vs Smart Dispatch",
+        "description": "Retrieve measured peak shaving, waiting time reduction, and fairness metrics from simulation benchmarks.",
+        "operationId": "get_simulation_metrics_api_v1_metrics_simulation_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/recommend": {
+      "post": {
+        "tags": [
+          "Recommendations"
+        ],
+        "summary": "Find Top-3 station and time-slot recommendations",
+        "description": "Generate Top-3 recommended charging slots based on user priority ('fastest', 'balanced', 'grid_friendly')\nwhile respecting hard transformer capacity limits (<= 90%).",
+        "operationId": "create_recommendation_api_v1_recommend_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecommendRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecommendResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/replay/start": {
+      "post": {
+        "tags": [
+          "Replay"
+        ],
+        "summary": "Start an accelerated 60x simulation replay",
+        "description": "Initiate a 60x simulation replay playback session (requires operator or admin role).",
+        "operationId": "start_replay_api_v1_replay_start_post",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplayStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayStartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check (v1)",
+        "operationId": "health_v1_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CandidateSlot": {
+        "properties": {
+          "station": {
+            "type": "string",
+            "title": "Station",
+            "examples": [
+              "Market Road"
+            ]
+          },
+          "station_id": {
+            "type": "string",
+            "title": "Station Id",
+            "examples": [
+              "S1"
+            ]
+          },
+          "hour": {
+            "type": "integer",
+            "title": "Hour",
+            "examples": [
+              15
+            ]
+          },
+          "starts_in_h": {
+            "type": "integer",
+            "title": "Starts In H",
+            "examples": [
+              1
+            ]
+          },
+          "wait_min": {
+            "type": "number",
+            "title": "Wait Min",
+            "examples": [
+              4.2
+            ]
+          },
+          "detour_min": {
+            "type": "number",
+            "title": "Detour Min",
+            "examples": [
+              0.0
+            ]
+          },
+          "grid_load_pct": {
+            "type": "number",
+            "title": "Grid Load Pct",
+            "examples": [
+              68.5
+            ]
+          },
+          "score": {
+            "type": "number",
+            "title": "Score",
+            "examples": [
+              0.245
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "station",
+          "station_id",
+          "hour",
+          "starts_in_h",
+          "wait_min",
+          "detour_min",
+          "grid_load_pct",
+          "score"
+        ],
+        "title": "CandidateSlot"
+      },
+      "ClusterResponse": {
+        "properties": {
+          "transformer_kva": {
+            "type": "number",
+            "title": "Transformer Kva",
+            "description": "Nameplate transformer capacity in kVA",
+            "examples": [
+              100.0
+            ]
+          },
+          "power_factor": {
+            "type": "number",
+            "title": "Power Factor",
+            "description": "Power factor (PF)",
+            "examples": [
+              0.95
+            ]
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/components/schemas/StationSchema"
+            },
+            "type": "array",
+            "title": "Stations",
+            "description": "List of charging stations connected to the cluster"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transformer_kva",
+          "power_factor",
+          "stations"
+        ],
+        "title": "ClusterResponse"
+      },
+      "ForecastResponse": {
+        "properties": {
+          "hours": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Hours",
+            "description": "Forecast hours of day (0-23)",
+            "examples": [
+              [
+                14,
+                15,
+                16,
+                17,
+                18
+              ]
+            ]
+          },
+          "p10": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "P10",
+            "description": "10th percentile load as % of transformer rating",
+            "examples": [
+              [
+                24.5,
+                32.1,
+                45.0
+              ]
+            ]
+          },
+          "p50": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "P50",
+            "description": "50th percentile (median) load as % of transformer rating",
+            "examples": [
+              [
+                38.2,
+                48.7,
+                65.4
+              ]
+            ]
+          },
+          "p90": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "P90",
+            "description": "90th percentile load as % of transformer rating",
+            "examples": [
+              [
+                52.1,
+                68.3,
+                86.5
+              ]
+            ]
+          },
+          "warn": {
+            "type": "integer",
+            "title": "Warn",
+            "description": "Warning threshold percentage",
+            "default": 80,
+            "examples": [
+              80
+            ]
+          },
+          "critical": {
+            "type": "integer",
+            "title": "Critical",
+            "description": "Critical overload threshold percentage",
+            "default": 90,
+            "examples": [
+              90
+            ]
+          },
+          "model_version": {
+            "type": "string",
+            "title": "Model Version",
+            "description": "Forecasting model version",
+            "examples": [
+              "lightgbm_quantile_conformal_v1"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "hours",
+          "p10",
+          "p50",
+          "p90",
+          "model_version"
+        ],
+        "title": "ForecastResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LoginRequest": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "description": "User account username",
+            "examples": [
+              "operator_c1"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "Plaintext account password",
+            "examples": [
+              "OperatorC1_2026!"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "PaginatedResponse_StationSchema_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StationSchema"
+            },
+            "type": "array",
+            "title": "Items",
+            "description": "Page items"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Page",
+            "description": "Current page number (1-indexed)",
+            "default": 1,
+            "examples": [
+              1
+            ]
+          },
+          "page_size": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Page Size",
+            "description": "Items per page",
+            "default": 10,
+            "examples": [
+              10
+            ]
+          },
+          "total_items": {
+            "type": "integer",
+            "title": "Total Items",
+            "description": "Total count of items across all pages",
+            "examples": [
+              4
+            ]
+          },
+          "total_pages": {
+            "type": "integer",
+            "title": "Total Pages",
+            "description": "Total number of pages",
+            "examples": [
+              1
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total_items",
+          "total_pages"
+        ],
+        "title": "PaginatedResponse[StationSchema]"
+      },
+      "RecommendRequest": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "description": "Dispatch strategy priority: 'fastest', 'balanced', or 'grid_friendly'",
+            "default": "balanced",
+            "examples": [
+              "balanced"
+            ]
+          },
+          "start_hour": {
+            "type": "integer",
+            "maximum": 23.0,
+            "minimum": 0.0,
+            "title": "Start Hour",
+            "description": "Search starting hour of day",
+            "default": 14,
+            "examples": [
+              14
+            ]
+          },
+          "horizon": {
+            "type": "integer",
+            "maximum": 24.0,
+            "minimum": 1.0,
+            "title": "Horizon",
+            "description": "Lookahead horizon in hours",
+            "default": 12,
+            "examples": [
+              12
+            ]
+          }
+        },
+        "type": "object",
+        "title": "RecommendRequest"
+      },
+      "RecommendResponse": {
+        "properties": {
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "examples": [
+              "balanced"
+            ]
+          },
+          "top3": {
+            "items": {
+              "$ref": "#/components/schemas/CandidateSlot"
+            },
+            "type": "array",
+            "title": "Top3",
+            "description": "Top 3 recommended station and slot combinations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode",
+          "top3"
+        ],
+        "title": "RecommendResponse"
+      },
+      "RefreshTokenRequest": {
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "Valid refresh token",
+            "examples": [
+              "eyJhbGciOiJIUzI1Ni..."
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "refresh_token"
+        ],
+        "title": "RefreshTokenRequest"
+      },
+      "ReplayStartRequest": {
+        "properties": {
+          "speed_multiplier": {
+            "type": "number",
+            "maximum": 3600.0,
+            "minimum": 1.0,
+            "title": "Speed Multiplier",
+            "description": "Playback speed acceleration multiplier",
+            "default": 60.0,
+            "examples": [
+              60.0
+            ]
+          },
+          "horizon_hours": {
+            "type": "integer",
+            "maximum": 168.0,
+            "minimum": 1.0,
+            "title": "Horizon Hours",
+            "description": "Replay duration in hours",
+            "default": 24,
+            "examples": [
+              24
+            ]
+          }
+        },
+        "type": "object",
+        "title": "ReplayStartRequest"
+      },
+      "ReplayStartResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id",
+            "examples": [
+              "replay-1728643200"
+            ]
+          },
+          "speed_multiplier": {
+            "type": "number",
+            "title": "Speed Multiplier",
+            "examples": [
+              60.0
+            ]
+          },
+          "horizon_hours": {
+            "type": "integer",
+            "title": "Horizon Hours",
+            "examples": [
+              24
+            ]
+          },
+          "started_at": {
+            "type": "string",
+            "title": "Started At",
+            "examples": [
+              "2026-10-11T05:00:00Z"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "examples": [
+              "running"
+            ]
+          },
+          "total_ticks": {
+            "type": "integer",
+            "title": "Total Ticks",
+            "examples": [
+              1440
+            ]
+          },
+          "current_tick": {
+            "type": "integer",
+            "title": "Current Tick",
+            "examples": [
+              0
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "speed_multiplier",
+          "horizon_hours",
+          "started_at",
+          "status",
+          "total_ticks",
+          "current_tick"
+        ],
+        "title": "ReplayStartResponse"
+      },
+      "StationSchema": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "title": "Id",
+            "description": "Unique station identifier",
+            "examples": [
+              "S1"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Human-readable station name",
+            "examples": [
+              "Market Road"
+            ]
+          },
+          "chargers": {
+            "type": "integer",
+            "title": "Chargers",
+            "description": "Number of active charging plugs",
+            "examples": [
+              8
+            ]
+          },
+          "kw": {
+            "type": "number",
+            "title": "Kw",
+            "description": "Power capacity per charger in kW",
+            "examples": [
+              7.4
+            ]
+          },
+          "detour": {
+            "type": "number",
+            "title": "Detour",
+            "description": "Average detour time in minutes from main corridor",
+            "examples": [
+              0.0
+            ]
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude",
+            "description": "WGS84 latitude",
+            "examples": [
+              12.9716
+            ]
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude",
+            "description": "WGS84 longitude",
+            "examples": [
+              77.5946
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "chargers",
+          "kw",
+          "detour"
+        ],
+        "title": "StationSchema"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "examples": [
+              "eyJhbGciOiJIUzI1Ni..."
+            ]
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "examples": [
+              "eyJhbGciOiJIUzI1Ni..."
+            ]
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer",
+            "examples": [
+              "bearer"
+            ]
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Access token expiration in seconds",
+            "default": 900,
+            "examples": [
+              900
+            ]
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserProfileResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "refresh_token",
+          "user"
+        ],
+        "title": "TokenResponse"
+      },
+      "TransformerRiskResponse": {
+        "properties": {
+          "transformer_id": {
+            "type": "string",
+            "title": "Transformer Id",
+            "description": "Transformer identifier",
+            "examples": [
+              "T1"
+            ]
+          },
+          "kva": {
+            "type": "number",
+            "title": "Kva",
+            "description": "Rated capacity in kVA",
+            "examples": [
+              100.0
+            ]
+          },
+          "peak_p90_pct": {
+            "type": "number",
+            "title": "Peak P90 Pct",
+            "description": "Highest P90 load expected over next 24 hours",
+            "examples": [
+              86.5
+            ]
+          },
+          "peak_hour": {
+            "type": "integer",
+            "title": "Peak Hour",
+            "description": "Hour of the forecast peak (0-23)",
+            "examples": [
+              18
+            ]
+          },
+          "first_warning_hour": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Warning Hour",
+            "description": "First hour where P90 forecast exceeds 80% limit",
+            "examples": [
+              17
+            ]
+          },
+          "level": {
+            "type": "string",
+            "title": "Level",
+            "description": "Current risk tier: 'ok', 'warning', or 'critical'",
+            "examples": [
+              "warning"
+            ]
+          },
+          "warn_threshold_pct": {
+            "type": "number",
+            "title": "Warn Threshold Pct",
+            "default": 80.0,
+            "examples": [
+              80.0
+            ]
+          },
+          "crit_threshold_pct": {
+            "type": "number",
+            "title": "Crit Threshold Pct",
+            "default": 90.0,
+            "examples": [
+              90.0
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "transformer_id",
+          "kva",
+          "peak_p90_pct",
+          "peak_hour",
+          "level"
+        ],
+        "title": "TransformerRiskResponse"
+      },
+      "UserProfileResponse": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username",
+            "examples": [
+              "operator_c1"
+            ]
+          },
+          "role": {
+            "type": "string",
+            "title": "Role",
+            "description": "Role: driver, operator, admin, judge",
+            "examples": [
+              "operator"
+            ]
+          },
+          "cluster_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cluster Id",
+            "description": "Cluster identifier assigned to operator",
+            "examples": [
+              "C1"
+            ]
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email",
+            "examples": [
+              "operator_c1@cluster.ev"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "role"
+        ],
+        "title": "UserProfileResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "JWT authentication, token refresh, and user identity profile"
+    },
+    {
+      "name": "Clusters",
+      "description": "Cluster topology, transformer capacity, and connected stations"
+    },
+    {
+      "name": "Stations",
+      "description": "Charging stations with pagination and charger capacities"
+    },
+    {
+      "name": "Forecast",
+      "description": "Calibrated P10/P50/P90 quantile load predictions"
+    },
+    {
+      "name": "Transformer",
+      "description": "Transformer risk monitoring and early warning alerts (80% warn, 90% crit)"
+    },
+    {
+      "name": "Recommendations",
+      "description": "Multi-objective smart charging dispatch recommendations"
+    },
+    {
+      "name": "Simulation",
+      "description": "Measured discrete-event simulation benchmarks (FCFS vs Smart Dispatch)"
+    },
+    {
+      "name": "Replay",
+      "description": "Accelerated 60x historical and simulated replay control"
+    },
+    {
+      "name": "Live Telemetry",
+      "description": "Real-time WebSocket streaming of cluster metrics"
+    }
+  ]
+}
