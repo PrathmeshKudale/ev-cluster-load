@@ -1,0 +1,114 @@
+export interface ChargerDetail {
+  id: string
+  evse_id: number
+  max_kw: number
+  status: 'Available' | 'Charging' | 'Finishing' | 'Faulted'
+  current_power_kw: number
+}
+
+export interface StationDetailFixture {
+  id: string
+  name: string
+  cluster_id: string
+  chargers_count: number
+  kw_per_charger: number
+  detour_min: number
+  latitude: number
+  longitude: number
+  active_sessions: number
+  current_active_kw: number
+  utilization_percent: number
+  erlang_c_wait_min: number
+  chargers: ChargerDetail[]
+}
+
+export const stationsFixture: StationDetailFixture[] = [
+  {
+    id: 'S1',
+    name: 'Market Road Hub',
+    cluster_id: 'C1',
+    chargers_count: 8,
+    kw_per_charger: 7.4,
+    detour_min: 0.0,
+    latitude: 12.9716,
+    longitude: 77.5946,
+    active_sessions: 4,
+    current_active_kw: 29.6,
+    utilization_percent: 50.0,
+    erlang_c_wait_min: 0.0,
+    chargers: [
+      { id: 'S1-C1', evse_id: 1, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S1-C2', evse_id: 2, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S1-C3', evse_id: 3, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S1-C4', evse_id: 4, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S1-C5', evse_id: 5, max_kw: 7.4, status: 'Available', current_power_kw: 0.0 },
+      { id: 'S1-C6', evse_id: 6, max_kw: 7.4, status: 'Available', current_power_kw: 0.0 },
+      { id: 'S1-C7', evse_id: 7, max_kw: 7.4, status: 'Available', current_power_kw: 0.0 },
+      { id: 'S1-C8', evse_id: 8, max_kw: 7.4, status: 'Available', current_power_kw: 0.0 },
+    ],
+  },
+  {
+    id: 'S2',
+    name: 'Station Plaza',
+    cluster_id: 'C1',
+    chargers_count: 6,
+    kw_per_charger: 7.4,
+    detour_min: 4.0,
+    latitude: 12.9815,
+    longitude: 77.6083,
+    active_sessions: 4,
+    current_active_kw: 22.2,
+    utilization_percent: 66.7,
+    erlang_c_wait_min: 4.2,
+    chargers: [
+      { id: 'S2-C1', evse_id: 1, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S2-C2', evse_id: 2, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S2-C3', evse_id: 3, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S2-C4', evse_id: 4, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S2-C5', evse_id: 5, max_kw: 7.4, status: 'Available', current_power_kw: 0.0 },
+      { id: 'S2-C6', evse_id: 6, max_kw: 7.4, status: 'Available', current_power_kw: 0.0 },
+    ],
+  },
+  {
+    id: 'S3',
+    name: 'College Gate',
+    cluster_id: 'C1',
+    chargers_count: 6,
+    kw_per_charger: 7.4,
+    detour_min: 7.0,
+    latitude: 12.9611,
+    longitude: 77.5855,
+    active_sessions: 5,
+    current_active_kw: 14.8,
+    utilization_percent: 83.3,
+    erlang_c_wait_min: 8.5,
+    chargers: [
+      { id: 'S3-C1', evse_id: 1, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S3-C2', evse_id: 2, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S3-C3', evse_id: 3, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S3-C4', evse_id: 4, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S3-C5', evse_id: 5, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S3-C6', evse_id: 6, max_kw: 7.4, status: 'Available', current_power_kw: 0.0 },
+    ],
+  },
+  {
+    id: 'S4',
+    name: 'Ring Road Hub',
+    cluster_id: 'C1',
+    chargers_count: 4,
+    kw_per_charger: 7.4,
+    detour_min: 10.0,
+    latitude: 12.9922,
+    longitude: 77.5620,
+    active_sessions: 4,
+    current_active_kw: 7.4,
+    utilization_percent: 100.0,
+    erlang_c_wait_min: 18.2,
+    chargers: [
+      { id: 'S4-C1', evse_id: 1, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S4-C2', evse_id: 2, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S4-C3', evse_id: 3, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+      { id: 'S4-C4', evse_id: 4, max_kw: 7.4, status: 'Charging', current_power_kw: 7.4 },
+    ],
+  },
+]

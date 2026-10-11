@@ -1,87 +1,16 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>EV cluster load forecast</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#eef2f1;--ink:#16302b;--muted:#566d68;--blue:#1f4e8c;--band:#bcd5ea;--warn:#c98a00;--crit:#c23b22;--ok:#2f7d5b;--card:#fff;--line:#cbd8d4}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.55 'Atkinson Hyperlegible',system-ui,sans-serif}
-main{max-width:1040px;margin:0 auto;padding:36px 20px 60px}
-h1{font-size:clamp(28px,4.6vw,46px);line-height:1.12;margin:0 0 10px;font-weight:700;letter-spacing:-.01em;max-width:20 em}
-h2{font-size:20px;margin:0 0 12px}
-p{margin:0;color:var(--muted);max-width:62ch}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 14px 6px;margin-top:22px}
-svg{width:100%;height:auto;display:block}.t{font-size:13px;fill:var(--muted)}
-.cols{display:grid;grid-template-columns:3fr 2fr;gap:36px;margin-top:40px}
-@media(max-width:760px){.cols{grid-template-columns:1fr}}
-fieldset{border:0;padding:0;margin:0 0 14px;display:flex;gap:18px;flex-wrap:wrap}
-label{display:flex;gap:6px;align-items:center}input{accent-color:var(--blue)}
-button{font:inherit;font-weight:700;background:var(--blue);color:#fff;border:0;border-radius:6px;padding:10px 18px;cursor:pointer}
-button:focus-visible,input:focus-visible{outline:3px solid #f2b705;outline-offset:2px}
-ol{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:10px}
-li{background:var(--card);border-left:6px solid var(--ok);border-radius:4px 10px 10px 4px;padding:10px 14px}
-li b{font-size:18px}li span{display:block;color:var(--muted);font-size:15px}
-table{width:100%;border-collapse:collapse;font-size:16px}td,th{padding:8px 4px;border-bottom:1px solid var(--line);text-align:left}
-th{font-weight:700;color:var(--muted)}
-</style>
-</head>
-<body>
-<main>
-  <h1 id="head">Loading forecast</h1>
-  <p id="sub"></p>
-  <div class="panel" id="chart"></div>
-  <div class="cols">
-    <section>
-      <h2>Find a charging slot</h2>
-      <fieldset aria-label="Charging priority">
-        <label><input type="radio" name="mode" value="fastest">Fastest</label>
-        <label><input type="radio" name="mode" value="balanced" checked>Balanced</label>
-        <label><input type="radio" name="mode" value="grid_friendly">Grid friendly</label>
-      </fieldset>
-      <button id="go">Find slots</button>
-      <ol id="res" aria-live="polite"></ol>
-    </section>
-    <section>
-      <h2>Stations in this cluster</h2>
-      <table><thead><tr><th>Station</th><th>Chargers</th><th>Detour</th></tr></thead><tbody id="stations"></tbody></table>
-      <p style="margin-top:14px;font-size:15px">Demo data and a fixed 16:00 start. Replace with real sessions to get real forecasts.</p>
-    </section>
-  </div>
-</main>
-<script>
-const START=16,$=s=>document.querySelector(s),hh=h=>String(h).padStart(2,'0')+':00';
-const get=async(u,o)=>{const r=await fetch(u,o);if(!r.ok)throw new Error(u+' '+r.status);return r.json()};
-function chart(f){
-  const W=960,H=330,L=44,R=76,T=12,B=28,Y=140,x=i=>L+i*(W-L-R)/23,y=v=>T+(1-Math.min(v,Y)/Y)*(H-T-B);
-  let s='';
-  for(let i=0;i<23;i++){const v=f.p90[i];if(v>80)s+=`<rect x="${x(i)}" y="${T}" width="${x(i+1)-x(i)}" height="${H-T-B}" fill="${v>90?'var(--crit)':'var(--warn)'}" opacity=".13"/>`}
-  [0,40,80,120].forEach(v=>s+=`<text x="${L-8}" y="${y(v)+4}" text-anchor="end" class="t">${v}%</text>`);
-  f.hours.forEach((h,i)=>{if(i%3===0)s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" class="t">${hh(h)}</text>`});
-  const up=f.p90.map((v,i)=>x(i)+','+y(v)),dn=f.p10.map((v,i)=>x(i)+','+y(v)).reverse();
-  s+=`<polygon points="${up.concat(dn).join(' ')}" fill="var(--band)" opacity=".9"/>`;
-  [[80,'warning','var(--warn)'],[90,'critical','var(--crit)']].forEach(([v,n,c])=>s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${c}" stroke-width="1.5" stroke-dasharray="6 4"/><text x="${W-R+6}" y="${y(v)+4}" class="t" style="fill:${c}">${v}% ${n}</text>`);
-  s+=`<polyline points="${f.p50.map((v,i)=>x(i)+','+y(v)).join(' ')}" fill="none" stroke="var(--blue)" stroke-width="3"/>`;
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forecast of cluster load as a share of transformer rating over the next 24 hours">${s}</svg>`;
-}
-async function find(){
-  const mode=document.querySelector('input[name=mode]:checked').value;
-  const r=await get('/api/recommend',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode,start_hour:START})});
-  $('#res').innerHTML=r.top3.map(c=>{const col=c.grid_load_pct>90?'--crit':c.grid_load_pct>80?'--warn':'--ok';
-    return `<li style="border-left-color:var(${col})"><b>${c.station} at ${hh(c.hour)}</b><span>${c.starts_in_h===0?'Starts now':'Starts in '+c.starts_in_h+' h'}. Expected wait ${c.wait_min} min, detour ${c.detour_min} min, grid at ${Math.round(c.grid_load_pct)}% of the limit.</span></li>`}).join('');
-}
-$('#go').onclick=()=>find().catch(()=>$('#res').innerHTML='<li>The recommendation service did not respond. Check that the API is running.</li>');
-(async()=>{
-  const [f,t,c]=await Promise.all([get('/api/forecast?start_hour='+START),get('/api/transformer?start_hour='+START),get('/api/cluster')]);
-  $('#head').textContent=t.level==='ok'?'Cluster load stays inside the transformer limit':`Load is forecast to reach ${Math.round(t.peak_p90_pct)}% of the ${t.kva} kVA transformer at ${hh(t.peak_hour)}`;
-  $('#sub').textContent=t.first_warning_hour===null?'':`The 80% warning line is crossed from ${hh(t.first_warning_hour)}. The blue line is expected load; the band spans P10 to P90.`;
-  $('#chart').innerHTML=chart(f);
-  $('#stations').innerHTML=c.stations.map(s=>`<tr><td>${s.name}</td><td>${s.chargers} × ${s.kw} kW</td><td>${s.detour} min</td></tr>`).join('');
-  find();
-})().catch(()=>{$('#head').textContent='Could not reach the API. Start the server and reload.'});
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EV cluster load forecast, smart dispatch, and transformer headroom management." />
+    <title>EV cluster load forecast — Smart Charging & Transformer Protection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
