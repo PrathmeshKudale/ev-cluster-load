@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from app.api.deps import get_current_user_optional
 from app.api.v1.schemas import ReplayStartRequest, ReplayStartResponse
 from app.core.errors import AppException
-from app.services.simulation_service import ReplayService
+from app.services.replay_service import ReplayService
 from app.services.user_service import UserDTO
 
 router = APIRouter(prefix="/replay", tags=["Replay"])

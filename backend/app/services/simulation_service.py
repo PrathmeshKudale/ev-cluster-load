@@ -5,6 +5,10 @@ from pathlib import Path
 import pandas as pd
 
 
+from app.services.fairness_service import FairnessService
+from app.services.replay_service import ReplayService
+
+
 class SimulationService:
     @classmethod
     def get_simulation_metrics(cls) -> Dict:
@@ -24,58 +28,30 @@ class SimulationService:
             except Exception:
                 pass
 
-        return {
-            "evaluation_type": "measured_simulation_benchmark",
-            "benchmark_period_days": 14,
-            "strategies": {
-                "fcfs": {
-                    "name": "First-Come-First-Served (Unmanaged)",
-                    "peak_load_kw": 88.5,
-                    "transformer_overload_warn_hours": 3.4,
-                    "transformer_overload_crit_hours": 1.2,
-                    "mean_wait_min": 18.6,
-                    "jain_fairness_index": 0.81,
-                },
-                "smart_dispatch": {
-                    "name": "Transformer-Aware Smart Dispatch",
-                    "peak_load_kw": 74.2,
-                    "transformer_overload_warn_hours": 0.4,
-                    "transformer_overload_crit_hours": 0.0,
-                    "mean_wait_min": 8.1,
-                    "jain_fairness_index": 0.94,
-                },
-            },
-            "impact_summary": {
-                "peak_shaved_kw": 14.3,
-                "peak_shaved_pct": 16.2,
-                "critical_overload_reduction_pct": 100.0,
-                "wait_time_reduction_pct": 56.5,
-                "forecasting_mae_improvement_pct": improvement_pct,
-            },
+        fcfs_data = {
+            "name": "First-Come-First-Served (Unmanaged)",
+            "peak_load_kw": 88.5,
+            "transformer_overload_warn_hours": 3.4,
+            "transformer_overload_crit_hours": 1.2,
+            "mean_wait_min": 18.6,
+            "jain_fairness_index": 0.81,
+        }
+        smart_data = {
+            "name": "Transformer-Aware Smart Dispatch",
+            "peak_load_kw": 74.2,
+            "transformer_overload_warn_hours": 0.4,
+            "transformer_overload_crit_hours": 0.0,
+            "mean_wait_min": 8.1,
+            "jain_fairness_index": 0.94,
         }
 
-
-class ReplayService:
-    _current_session: Optional[Dict] = None
-
-    @classmethod
-    def start_replay(cls, speed_multiplier: float = 60.0, horizon_hours: int = 24) -> Dict:
-        """Initialize and start a 60x accelerated simulation replay."""
-        now = datetime.now(timezone.utc)
-        cls._current_session = {
-            "session_id": f"replay-{int(now.timestamp())}",
-            "speed_multiplier": speed_multiplier,
-            "horizon_hours": horizon_hours,
-            "started_at": now.isoformat(),
-            "status": "running",
-            "total_ticks": horizon_hours * 60,
-            "current_tick": 0,
+        comparison = FairnessService.benchmark_comparison(fcfs_data, smart_data)
+        comparison["evaluation_type"] = "measured_simulation_benchmark"
+        comparison["benchmark_period_days"] = 14
+        comparison["strategies"] = {
+            "fcfs": comparison["fcfs"],
+            "smart_dispatch": comparison["smart_dispatch"],
         }
-        return cls._current_session
+        comparison["impact_summary"]["forecasting_mae_improvement_pct"] = improvement_pct
+        return comparison
 
-    @classmethod
-    def get_status(cls) -> Dict:
-        """Get the current state of the replay."""
-        if cls._current_session is None:
-            return {"status": "idle", "session_id": None}
-        return cls._current_session

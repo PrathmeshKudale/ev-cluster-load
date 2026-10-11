@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/b3-logic
+- **Pure Unit-Testable Domain Services**:
+  - `RecommendationService` (`backend/app/services/recommendation_service.py`):
+    - Multi-objective dispatch score minimizing:
+      $$J = w_1 \cdot \text{wait} + w_2 \cdot \text{detour} + w_3 \cdot (1 - \text{utilization balance}) + w_4 \cdot \text{overload risk}$$
+    - Analytic Hierarchy Process (AHP) pairwise comparison matrices with Saaty consistency check ($CR < 0.10$) for 3 driver modes: `fastest` ($CR=0.011$), `balanced` ($CR=0.000$), and `grid_friendly` ($CR=0.0038$).
+    - Erlang-C ($M/M/c$) queuing model computing expected wait time in minutes given arrival rate $\lambda$, service rate $\mu$, and $c$ parallel charging bays.
+    - Google OR-Tools CP-SAT integer programming solver (`assign_batch_drivers_cp_sat`) for multi-driver batch arrivals subject to station bay capacity and cluster transformer kVA limits.
+    - Transformer load constraint: Zero recommendations exceed 90% effective transformer loading when a feasible slot is available.
+  - `TransformerService` (`backend/app/services/transformer_service.py`):
+    - Pure conversions: active power (kW) to apparent power (kVA) using power factor ($\text{kVA} = \text{kW} / \text{pf}$), and vice versa.
+    - Continuous piecewise ambient-temperature derating based on IEEE C57.91 and IEC 60076-7 loading guides (full capacity up to 30°C, linear derate up to 55°C).
+    - Pandapower distribution feeder integration (`cross_check_feeder_pandapower`) modeling 11/0.415 kV substation, radial underground aluminum lines, and transformer losses.
+  - `FairnessService` (`backend/app/services/fairness_service.py`):
+    - Jain's Fairness Index ($\mathcal{J} \in [1/n, 1]$), station utilization balance, and peak-shaving comparative metrics between FCFS and Smart Dispatch.
+  - `ReplayService` (`backend/app/services/replay_service.py`):
+    - Pure simulation playback engine supporting `start_replay`, `tick`, `seek`, `pause`, `resume`, `stop`, and telemetry state generation with ISO timestamps.
+- **Feeder Verification Script**:
+  - Added `scripts/verify_feeder_pandapower.py` executing standalone AC power flow across 50%, 80%, 90%, and 100% feeder load regimes, validating transformer loss and voltage drops against statutory limits.
+- **Acceptance & Hypothesis Property-Based Testing**:
+  - Implemented Hypothesis property-based testing in `backend/tests/test_logic.py` proving that no recommendation pushes P90 cluster load above 90% when a feasible slot exists.
+  - Added comprehensive test suites for AHP Consistency Ratios, Erlang-C queuing, CP-SAT batch assignment, and Pandapower AC power flow convergence.
+
 ### Added - feat/b2-auth
 - **JWT Authentication & Token Lifecycle**:
   - Implemented short-lived access tokens (15 minutes) and longer-lived refresh tokens (7 days) in `backend/app/core/security.py`.

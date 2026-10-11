@@ -49,6 +49,27 @@ The FastAPI backend is structured into modular layers (`api/v1`, `services`, `db
 | `POST` | `/api/v1/replay/start` | Initialize accelerated simulation replay session | Operator / Admin |
 | `WS` | `/ws/live` | Live WebSocket telemetry and event stream | Public / Live Stream |
 
+### Recommendation & Dispatch Engine (`RecommendationService`)
+
+The dispatch optimizer ranks stations and time slots to minimize:
+$$J = w_1 \cdot \text{wait} + w_2 \cdot \text{detour} + w_3 \cdot (1 - \text{utilization balance}) + w_4 \cdot \text{overload risk}$$
+
+- **AHP Pairwise Matrices**: Objective weights are derived from Analytic Hierarchy Process comparison matrices with Saaty consistency ratio validation ($CR < 0.10$):
+  - `fastest`: Prioritizes immediate charging ($w_{\text{wait}} = 0.553, w_{\text{detour}} = 0.270, w_{\text{bal}} = 0.057, w_{\text{risk}} = 0.120$, $CR = 0.011$).
+  - `balanced`: Equalized driver convenience and grid moderation ($w = [0.25, 0.25, 0.25, 0.25]$, $CR = 0.000$).
+  - `grid_friendly`: Prioritizes transformer headroom and cluster load balancing ($w_{\text{wait}} = 0.065, w_{\text{detour}} = 0.098, w_{\text{bal}} = 0.354, w_{\text{risk}} = 0.483$, $CR = 0.0038$).
+- **Erlang-C Queuing Model**: Computes expected queue waiting time ($W_q$) under $M/M/c$ multiserver queues given station arrival rates $\lambda$, charging duration $\mu$, and $c$ parallel chargers.
+- **OR-Tools CP-SAT Batch Solver**: Resolves concurrent multi-driver arrivals (`assign_batch_drivers_cp_sat`) via integer programming, enforcing station concurrency and transformer capacity constraints.
+- **Transformer Headroom Guarantee**: Verified via Hypothesis property-based testing—no recommendation pushes P90 cluster load above 90% when a feasible slot exists.
+
+### Transformer Management & Feeder Verification (`TransformerService`)
+
+- **Temperature Derating**: Piecewise continuous derating curve based on IEEE C57.91 and IEC 60076-7 (100% rated capacity up to 30°C, linear derate to 75% at 55°C).
+- **Pandapower AC Power Flow Cross-Check**: Standalone distribution network model cross-checking transformer iron/copper losses and statutory voltage drops across 4 operating regimes (50%, 80%, 90%, 100%):
+  ```bash
+  python scripts/verify_feeder_pandapower.py
+  ```
+
 ### Authentication & Role-Based Access Control (RBAC)
 
 The system enforces authentication using JWT (15-minute access token, 7-day refresh token) and Argon2id password hashing.
