@@ -23,6 +23,26 @@ STATIONS_CONFIG: List[Dict] = [
     {"id": "S4", "name": "Ring Road Hub", "chargers": 4, "kw": 7.4, "pop": 0.50, "detour": 10, "latitude": 12.9922, "longitude": 77.5620},
 ]
 
+# Mode & Database Configuration
+DEMO_MODE: str = os.getenv("DEMO_MODE", "memory").lower()
+
+DATABASE_URL: str = os.getenv(
+    "DATABASE_URL",
+    "postgresql+psycopg://postgres:postgres@localhost:5432/evcluster"
+)
+if DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
+# Asynchronous Database URL for SQLAlchemy 2 asyncpg
+ASYNC_DATABASE_URL: str = os.getenv("ASYNC_DATABASE_URL", "")
+if not ASYNC_DATABASE_URL:
+    if "postgresql+psycopg://" in DATABASE_URL:
+        ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+    elif "postgresql://" in DATABASE_URL:
+        ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+    else:
+        ASYNC_DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost:5432/evcluster"
+
 # Authentication & Security Configuration (Loaded from environment variables)
 JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "insecure-dev-secret-key-change-in-production-2026")
 JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")

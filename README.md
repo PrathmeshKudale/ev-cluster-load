@@ -24,6 +24,24 @@ Documentation:
 - [Database Migrations & Lifecycle](docs/db/migrations.md)
 - [Changelog](docs/CHANGELOG.md)
 
+## Database Architecture, Async Repositories & Bulk Loading
+
+The persistence layer is built on SQLAlchemy 2.0 with asynchronous execution via `asyncpg`:
+
+- **Repository per Domain Aggregate**:
+  - `ClusterRepository`: Encapsulates the Cluster aggregate (`Cluster`, `Transformer`, `Station`, `Charger`).
+  - `ForecastRepository`: Manages stored 24h P10/P50/P90 quantile forecasts and `clean.station_load` telemetry.
+  - `RecommendationRepository`: Persists multi-objective smart charging dispatch recommendations to `clean.recommendations`.
+  - `SimulationRepository`: Tracks `clean.sim_runs` and measured `clean.sim_metrics` for FCFS vs. Smart Dispatch.
+  - `UserRepository`: Handles credential verification, RBAC role lookups, and operator cluster boundaries.
+- **`DEMO_MODE=memory` Zero-Database Fallback**:
+  - The application operates with zero database dependencies when `DEMO_MODE=memory` (default) or when the database is offline.
+  - Guarantees 100% identical response shapes across all endpoints in both in-memory demo mode and live PostgreSQL database mode.
+- **Native PostgreSQL COPY Bulk Loader**:
+  - High-throughput streaming via native asyncpg `copy_records_to_table` protocol for TimescaleDB hypertables (`station_load`, `forecasts`, `sessions`), with parameterized batch fallback.
+- **Parameterized Query Safety**:
+  - All database interactions use typed SQLAlchemy 2 `select()` statements and bound parameter mappings. Queries are never constructed from raw user input strings.
+
 ## API Architecture & Endpoints
 
 The FastAPI backend is structured into modular layers (`api/v1`, `services`, `db`, `ml`, `sim`, `core`):

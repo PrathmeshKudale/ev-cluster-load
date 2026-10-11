@@ -1,11 +1,24 @@
-"""FastAPI dependencies for authentication, role authorization, and cluster scoping."""
 from typing import Optional
 from fastapi import Depends, Header, Request
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import AppException
 from app.core.security import decode_token
-from app.db.connection import get_db, set_db_cluster_id
+from app.db.connection import (
+    get_db,
+    get_async_db,
+    get_async_db_optional,
+    set_db_cluster_id,
+    set_async_db_cluster_id,
+)
+from app.db.repositories import (
+    ClusterRepository,
+    ForecastRepository,
+    RecommendationRepository,
+    SimulationRepository,
+    UserRepository,
+)
 from app.services.user_service import UserDTO, UserService
 
 
@@ -123,3 +136,68 @@ def verify_cluster_access(
             set_db_cluster_id(db, None)
         except Exception:
             pass
+
+
+async def verify_async_cluster_access(
+    cluster_id: str,
+    user: Optional[UserDTO] = None,
+    session: Optional[AsyncSession] = None,
+):
+    """Enforce operator cluster boundary in async routes."""
+    if user and user.role == "operator":
+        if user.cluster_id and user.cluster_id != cluster_id:
+            raise AppException(
+                code="CROSS_CLUSTER_ACCESS_DENIED",
+                message=f"Operator is restricted to cluster '{user.cluster_id}' and cannot access cluster '{cluster_id}'.",
+                status_code=403,
+            )
+        if session:
+            try:
+                await set_async_db_cluster_id(session, user.cluster_id)
+            except Exception:
+                pass
+    elif session:
+        try:
+            await set_async_db_cluster_id(session, None)
+        except Exception:
+            pass
+
+
+# ==============================================================================
+# Repository Dependencies per Aggregate
+# ==============================================================================
+
+async def get_cluster_repo(
+    db: Optional[AsyncSession] = Depends(get_async_db_optional),
+) -> ClusterRepository:
+    """Dependency injecting ClusterRepository bound to current async DB session or demo mode."""
+    return ClusterRepository(session=db)
+
+
+async def get_forecast_repo(
+    db: Optional[AsyncSession] = Depends(get_async_db_optional),
+) -> ForecastRepository:
+    """Dependency injecting ForecastRepository bound to current async DB session or demo mode."""
+    return ForecastRepository(session=db)
+
+
+async def get_recommendation_repo(
+    db: Optional[AsyncSession] = Depends(get_async_db_optional),
+) -> RecommendationRepository:
+    """Dependency injecting RecommendationRepository bound to current async DB session or demo mode."""
+    return RecommendationRepository(session=db)
+
+
+async def get_simulation_repo(
+    db: Optional[AsyncSession] = Depends(get_async_db_optional),
+) -> SimulationRepository:
+    """Dependency injecting SimulationRepository bound to current async DB session or demo mode."""
+    return SimulationRepository(session=db)
+
+
+async def get_user_repo(
+    db: Optional[AsyncSession] = Depends(get_async_db_optional),
+) -> UserRepository:
+    """Dependency injecting UserRepository bound to current async DB session or demo mode."""
+    return UserRepository(session=db)
+

@@ -28,8 +28,10 @@ from app.db.models import (
     ConfigTodTariff,
     StationEdge,
     User,
+    Forecast,
 )
 from app.graph.routing import build_station_edges
+from app.services.forecast_service import ForecastService
 from app.services.user_service import UserService
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -265,6 +267,30 @@ def seed_cluster(db: Session) -> Dict[str, int]:
     # 8. Seed RBAC Users (read-only judge, operators, drivers, admins)
     UserService.seed_demo_users_to_db(db)
 
+    # 9. Seed Calibrated Quantile Forecasts (clean.forecasts)
+    db.execute(text("DELETE FROM clean.forecasts"))
+    cluster_pct, station_util, model_version = ForecastService.get_cluster_and_station_forecasts()
+    now_issued = datetime(2026, 10, 8, 14, 0, tzinfo=timezone.utc)
+    for s_info in DEMO_STATIONS:
+        sid = s_info["id"]
+        c_kw = s_info["chargers"] * s_info["kw"]
+        for h in range(24):
+            tgt_ts = now_issued + timedelta(hours=h)
+            hod = tgt_ts.hour
+            st_profile = float(station_util[sid][hod])
+            p50_val = round(st_profile * c_kw, 2)
+            p10_val = round(p50_val * 0.70, 2)
+            p90_val = round(p50_val * 1.35, 2)
+            db.add(Forecast(
+                station_id=sid,
+                issued_at=now_issued,
+                target_ts=tgt_ts,
+                p10=p10_val,
+                p50=p50_val,
+                p90=p90_val,
+                model_version=model_version,
+            ))
+
     db.commit()
 
     # Collect row counts for validation
@@ -281,6 +307,7 @@ def seed_cluster(db: Session) -> Dict[str, int]:
         "station_load": db.query(StationLoad).count(),
         "sessions": db.query(EvSession).count(),
         "users": db.query(User).count(),
+        "forecasts": db.query(Forecast).count(),
     }
     return counts
 

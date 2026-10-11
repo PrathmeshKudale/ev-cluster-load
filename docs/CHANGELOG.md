@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/b4-db
+- **SQLAlchemy 2 Async with asyncpg Engine**:
+  - Implemented async engine (`async_engine`) and session factory (`AsyncSessionLocal`) using `postgresql+asyncpg://` in `backend/app/db/connection.py`.
+  - Added FastAPI async session dependencies: `get_async_db` and `get_async_db_optional` with transaction management (automatic commit and rollback on exception).
+  - Provided `set_async_db_cluster_id` and `verify_async_cluster_access` to preserve PostgreSQL Row-Level Security (RLS) across async routes.
+- **Repository Pattern per Domain Aggregate**:
+  - Structured modular aggregate repositories under `backend/app/db/repositories/`:
+    - `ClusterRepository`: Manages Cluster, Transformer, Station, and Charger aggregates; queries cluster topology and paginated station listings.
+    - `ForecastRepository`: Manages Forecast, StationLoad, and Weather aggregates; queries and formats stored 24h P10/P50/P90 calibrated load forecasts.
+    - `RecommendationRepository`: Persists smart dispatch decisions and candidate slot recommendations to `clean.recommendations`.
+    - `SimulationRepository`: Queries and persists measured simulation benchmark runs and metrics (`SimRun`, `SimMetric`).
+    - `UserRepository`: Manages User aggregate entities, credential lookups, and RBAC roles.
+- **`DEMO_MODE=memory` Zero-Database Fallback**:
+  - Integrated `DEMO_MODE` environment switch (`memory` by default).
+  - Enables full application functionality without requiring a running database while guaranteeing 100% exact response shape parity between memory demo mode and database mode.
+- **Native COPY-Based Bulk Loader (`CopyBulkLoader`)**:
+  - Implemented high-throughput bulk ingestion via native asyncpg `copy_records_to_table` protocol for `clean.station_load`, `clean.forecasts`, and `clean.sessions`, with parameterized batch fallback.
+- **Strict Parameterized Query Safety**:
+  - Ensured all queries use typed SQLAlchemy 2 `select()` and bound parameters (`:param`). Never builds SQL queries from user input.
+- **Acceptance & Container Test Suite**:
+  - Added comprehensive test suite in `backend/tests/test_db_integration.py` verifying shape parity, repository operations, SQL injection safety, and execution against live PostgreSQL/TimescaleDB container in CI.
+
 ### Added - feat/b3-logic
 - **Pure Unit-Testable Domain Services**:
   - `RecommendationService` (`backend/app/services/recommendation_service.py`):
