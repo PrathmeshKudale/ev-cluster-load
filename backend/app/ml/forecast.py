@@ -1,11 +1,19 @@
 """Inference forecast module providing calibrated LightGBM predictions with Seasonal Naive fallback."""
 import logging
+import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import joblib
 import numpy as np
 import pandas as pd
+
+try:
+    from app.ml.train import CalibratedQuantileForecaster
+    if "__main__" in sys.modules and not hasattr(sys.modules["__main__"], "CalibratedQuantileForecaster"):
+        setattr(sys.modules["__main__"], "CalibratedQuantileForecaster", CalibratedQuantileForecaster)
+except Exception:
+    pass
 
 logger = logging.getLogger(__name__)
 

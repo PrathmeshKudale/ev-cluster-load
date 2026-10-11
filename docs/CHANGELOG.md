@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/b1-api
+- Restructured `backend/app` into modular layered architecture:
+  - `app/api/v1/`: Versioned API routers (`clusters`, `stations`, `forecast`, `transformer`, `metrics`, `recommendations`, `replay`, `websockets`) and OpenAPI schemas.
+  - `app/services/`: Decoupled business logic (`ForecastService`, `TransformerService`, `RecommendationService`, `SimulationService`).
+  - `app/core/`: Application settings, standard error envelope (`ErrorEnvelope`), exception handlers, and reusable pagination model (`PaginatedResponse`).
+  - `app/sim/`: Discrete-event simulation runner framework (`DiscreteEventEngine`).
+  - `app/db/`: Database models, engine session, and idempotent seeder.
+  - `app/ml/`: Feature engineering, model training, and inference forecasting modules.
+- Endpoints served under `/api/v1`:
+  - `GET /api/v1/clusters`: Cluster metadata, transformer rating (kVA), and stations.
+  - `GET /api/v1/stations`: Paginated charging station listing with per-charger kW, count, and detour.
+  - `GET /api/v1/forecast`: Calibrated 24h P10/P50/P90 load forecasts against 80%/90% limits.
+  - `GET /api/v1/transformer/{id}/risk`: Transformer risk evaluation and early warning alert indicators.
+  - `GET /api/v1/metrics/simulation`: Performance and peak-shaving comparison (Smart Dispatch vs. FCFS).
+  - `POST /api/v1/recommend`: Top-3 ranked station and slot recommendations across `fastest`, `balanced`, and `grid_friendly` modes.
+  - `POST /api/v1/replay/start`: Accelerated replay session initialization.
+  - `WS /ws/live`: Live telemetry and interactive dispatch WebSocket streaming.
+- Legacy backward compatibility:
+  - Preserved existing `/api/cluster`, `/api/stations`, `/api/forecast`, `/api/transformer`, and `/api/recommend` endpoints via HTTP 307 temporary redirects to ensure the single-page dashboard (`frontend/index.html`) operates without modification.
+- Robust API standards:
+  - Consistent error envelope (`{"error": {"code": ..., "message": ..., "details": ...}}`) for 400, 404, 422, and 500 status codes.
+  - OpenAPI tags and examples documented on every route and schema for interactive testing via `/docs`.
+- Test suite:
+  - Added comprehensive contract test suite in `backend/tests/test_contract.py` covering all routes, pagination, OpenAPI schema compliance, legacy redirects, error envelopes, and WebSocket streaming.
+
 ### Added - feat/m3-lightgbm
 - Feature engineering pipeline in `backend/app/ml/features.py`:
   - Temporal features: hour of day, day of week, weekend/holiday indicator.

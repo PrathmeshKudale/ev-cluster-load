@@ -1,0 +1,101 @@
+"""OpenAPI Pydantic schemas with examples for API v1."""
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+# ==============================================================================
+# Cluster & Station Schemas
+# ==============================================================================
+
+class StationSchema(BaseModel):
+    id: str = Field(..., examples=["S1"], description="Unique station identifier")
+    name: str = Field(..., examples=["Market Road"], description="Human-readable station name")
+    chargers: int = Field(..., examples=[8], description="Number of active charging plugs")
+    kw: float = Field(..., examples=[7.4], description="Power capacity per charger in kW")
+    detour: float = Field(..., examples=[0.0], description="Average detour time in minutes from main corridor")
+    latitude: Optional[float] = Field(None, examples=[12.9716], description="WGS84 latitude")
+    longitude: Optional[float] = Field(None, examples=[77.5946], description="WGS84 longitude")
+
+
+class ClusterResponse(BaseModel):
+    transformer_kva: float = Field(..., examples=[100.0], description="Nameplate transformer capacity in kVA")
+    power_factor: float = Field(..., examples=[0.95], description="Power factor (PF)")
+    stations: List[StationSchema] = Field(..., description="List of charging stations connected to the cluster")
+
+
+# ==============================================================================
+# Forecast Schemas
+# ==============================================================================
+
+class ForecastResponse(BaseModel):
+    hours: List[int] = Field(..., examples=[[14, 15, 16, 17, 18]], description="Forecast hours of day (0-23)")
+    p10: List[float] = Field(..., examples=[[24.5, 32.1, 45.0]], description="10th percentile load as % of transformer rating")
+    p50: List[float] = Field(..., examples=[[38.2, 48.7, 65.4]], description="50th percentile (median) load as % of transformer rating")
+    p90: List[float] = Field(..., examples=[[52.1, 68.3, 86.5]], description="90th percentile load as % of transformer rating")
+    warn: int = Field(80, examples=[80], description="Warning threshold percentage")
+    critical: int = Field(90, examples=[90], description="Critical overload threshold percentage")
+    model_version: str = Field(..., examples=["lightgbm_quantile_conformal_v1"], description="Forecasting model version")
+
+
+# ==============================================================================
+# Transformer Risk Schemas
+# ==============================================================================
+
+class TransformerRiskResponse(BaseModel):
+    transformer_id: str = Field(..., examples=["T1"], description="Transformer identifier")
+    kva: float = Field(..., examples=[100.0], description="Rated capacity in kVA")
+    peak_p90_pct: float = Field(..., examples=[86.5], description="Highest P90 load expected over next 24 hours")
+    peak_hour: int = Field(..., examples=[18], description="Hour of the forecast peak (0-23)")
+    first_warning_hour: Optional[int] = Field(None, examples=[17], description="First hour where P90 forecast exceeds 80% limit")
+    level: str = Field(..., examples=["warning"], description="Current risk tier: 'ok', 'warning', or 'critical'")
+    warn_threshold_pct: float = Field(80.0, examples=[80.0])
+    crit_threshold_pct: float = Field(90.0, examples=[90.0])
+
+
+# ==============================================================================
+# Recommendation Schemas
+# ==============================================================================
+
+class RecommendRequest(BaseModel):
+    mode: str = Field(
+        "balanced",
+        examples=["balanced"],
+        description="Dispatch strategy priority: 'fastest', 'balanced', or 'grid_friendly'",
+    )
+    start_hour: int = Field(14, ge=0, le=23, examples=[14], description="Search starting hour of day")
+    horizon: int = Field(12, ge=1, le=24, examples=[12], description="Lookahead horizon in hours")
+
+
+class CandidateSlot(BaseModel):
+    station: str = Field(..., examples=["Market Road"])
+    station_id: str = Field(..., examples=["S1"])
+    hour: int = Field(..., examples=[15])
+    starts_in_h: int = Field(..., examples=[1])
+    wait_min: float = Field(..., examples=[4.2])
+    detour_min: float = Field(..., examples=[0.0])
+    grid_load_pct: float = Field(..., examples=[68.5])
+    score: float = Field(..., examples=[0.245])
+
+
+class RecommendResponse(BaseModel):
+    mode: str = Field(..., examples=["balanced"])
+    top3: List[CandidateSlot] = Field(..., description="Top 3 recommended station and slot combinations")
+
+
+# ==============================================================================
+# Simulation & Replay Schemas
+# ==============================================================================
+
+class ReplayStartRequest(BaseModel):
+    speed_multiplier: float = Field(60.0, ge=1.0, le=3600.0, examples=[60.0], description="Playback speed acceleration multiplier")
+    horizon_hours: int = Field(24, ge=1, le=168, examples=[24], description="Replay duration in hours")
+
+
+class ReplayStartResponse(BaseModel):
+    session_id: str = Field(..., examples=["replay-1728643200"])
+    speed_multiplier: float = Field(..., examples=[60.0])
+    horizon_hours: int = Field(..., examples=[24])
+    started_at: str = Field(..., examples=["2026-10-11T05:00:00Z"])
+    status: str = Field(..., examples=["running"])
+    total_ticks: int = Field(..., examples=[1440])
+    current_tick: int = Field(..., examples=[0])

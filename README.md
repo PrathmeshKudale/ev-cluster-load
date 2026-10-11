@@ -22,6 +22,28 @@ Documentation:
 - [Database Schema & ER Diagram](docs/db/schema.md)
 - [Data Modeling & Layers](docs/db/modeling.md)
 - [Database Migrations & Lifecycle](docs/db/migrations.md)
+- [Changelog](docs/CHANGELOG.md)
+
+## API Architecture & Endpoints
+
+The FastAPI backend is structured into modular layers (`api/v1`, `services`, `db`, `ml`, `sim`, `core`):
+
+- **Interactive API Documentation**: Available at `http://localhost:8000/docs` with full OpenAPI parameter definitions and request/response examples.
+- **Root Web Dashboard**: Single-page dashboard loaded at `http://localhost:8000/`.
+- **Legacy Redirects**: Backward-compatible HTTP 307 redirects map `/api/*` to `/api/v1/*`.
+- **Consistent Error Envelope**: All 4xx/5xx responses adhere to `{"error": {"code": "...", "message": "...", "details": ...}}`.
+
+### Version 1 Routes (`/api/v1`)
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/v1/clusters` | Transformer capacity (kVA), PF, and cluster station list |
+| `GET` | `/api/v1/stations` | Paginated stations list (`?page=1&page_size=10`) |
+| `GET` | `/api/v1/forecast` | Calibrated P10/P50/P90 load forecasts with 80%/90% limits |
+| `GET` | `/api/v1/transformer/{id}/risk` | Transformer risk assessment, peak load %, and alert levels |
+| `GET` | `/api/v1/metrics/simulation` | Comparative metrics (FCFS vs. Smart Dispatch, peak shaving) |
+| `POST` | `/api/v1/recommend` | Top-3 ranked stations and slots (`fastest`, `balanced`, `grid_friendly`) |
+| `POST` | `/api/v1/replay/start` | Initialize accelerated simulation replay session |
+| `WS` | `/ws/live` | Live WebSocket telemetry and event stream |
 
 ## Run
 
