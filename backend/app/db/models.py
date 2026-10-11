@@ -276,12 +276,18 @@ class SimMetric(Base):
 
 
 class User(Base):
-    """Anonymized user table with zero personal identifiable information (PII)."""
+    """User account table supporting JWT auth, RBAC roles (driver, operator, admin, judge), and cluster scoping."""
     __tablename__ = "users"
     __table_args__ = {"schema": "clean"}
 
-    user_hash = Column(String(64), primary_key=True)  # SHA-256 hash
-    preferences_json = Column(Text)
+    user_hash = Column(String(64), primary_key=True)  # SHA-256 identifier
+    username = Column(String(64), unique=True, index=True, nullable=True)
+    email = Column(String(128), unique=True, index=True, nullable=True)
+    hashed_password = Column(String(256), nullable=True)
+    role = Column(String(32), nullable=False, default="driver")  # driver, operator, admin, judge
+    cluster_id = Column(String(64), ForeignKey("clean.clusters.id"), nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    preferences_json = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
 

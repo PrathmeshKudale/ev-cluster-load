@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/b2-auth
+- **JWT Authentication & Token Lifecycle**:
+  - Implemented short-lived access tokens (15 minutes) and longer-lived refresh tokens (7 days) in `backend/app/core/security.py`.
+  - Added token rotation and decoding with dedicated exception handling for `TOKEN_EXPIRED` (401) and `INVALID_TOKEN` (401).
+  - Auth endpoints under `/api/v1/auth`: `POST /login`, `POST /refresh`, and `GET /me`.
+- **Argon2id Password Hashing**:
+  - Replaced legacy hashing with state-of-the-art Argon2id password hasher (`argon2-cffi`) resistant to GPU cracking and side-channel attacks.
+- **Role-Based Access Control (RBAC)**:
+  - Added user roles: `driver`, `operator`, `admin`, and read-only `judge` demo user.
+  - Role enforcement on sensitive endpoints (e.g. simulation replay restricted to `operator` and `admin`, returning 403 `INSUFFICIENT_PERMISSIONS` for drivers and judges).
+- **Cluster Scoping & PostgreSQL Row-Level Security (RLS)**:
+  - Enforced in API: Operators can only access their assigned `cluster_id`, raising 403 `CROSS_CLUSTER_ACCESS_DENIED` on cross-cluster requests.
+  - Enforced in Database: Implemented PostgreSQL Row-Level Security (RLS) on `clean.stations`, `clean.transformers`, and `clean.clusters` driven by session parameter `app.cluster_id`.
+  - Helper `set_db_cluster_id()` applies `SET LOCAL app.cluster_id = :cid` during operator requests.
+- **Alembic Migration `0002_add_auth_and_user_roles.py`**:
+  - Fully reversible migration adding `username`, `email`, `hashed_password`, `role`, `cluster_id`, and `is_active` to `clean.users`.
+  - Added unique indexes and RLS policies on cluster tables with full downgrade support.
+- **Seeded Demo Accounts**:
+  - Seeded read-only demo user `judge_demo` for judges (`JudgeDemo2026!`) with unrestricted read access across all clusters.
+  - Seeded demo operator accounts (`operator_c1`, `operator_c2`), driver (`driver_demo`), and administrator (`admin_demo`).
+- **Security & Secret Hygiene**:
+  - Created `.env.example` templates; verified no live secrets, credentials, or `.env` files are tracked in git.
+  - Comprehensive 18-test suite in `backend/tests/test_auth.py` covering login, refresh, expired tokens, role violations, cross-cluster access, and git secret audits.
+
 ### Added - feat/b1-api
 - Restructured `backend/app` into modular layered architecture:
   - `app/api/v1/`: Versioned API routers (`clusters`, `stations`, `forecast`, `transformer`, `metrics`, `recommendations`, `replay`, `websockets`) and OpenAPI schemas.

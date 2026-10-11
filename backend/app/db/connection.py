@@ -1,6 +1,7 @@
 """Database connection and session management with explicit Alembic naming conventions."""
 import os
-from sqlalchemy import MetaData, create_engine
+from typing import Optional
+from sqlalchemy import MetaData, create_engine, text
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 DATABASE_URL = os.getenv(
@@ -28,6 +29,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base(metadata=metadata)
 
 
+def set_db_cluster_id(session, cluster_id: Optional[str] = None):
+    """Set PostgreSQL app.cluster_id session parameter for Row-Level Security (RLS)."""
+    val = cluster_id or ""
+    session.execute(text("SET LOCAL app.cluster_id = :cid"), {"cid": val})
+
+
 def get_db():
     """FastAPI dependency for yielding database sessions."""
     db = SessionLocal()
@@ -35,3 +42,4 @@ def get_db():
         yield db
     finally:
         db.close()
+

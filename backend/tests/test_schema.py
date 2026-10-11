@@ -105,3 +105,4 @@ def test_seed_idempotency_identical_row_counts():
         assert first_counts["station_edges"] == 12
         assert first_counts["config_derating_curve"] > 0
         assert first_counts["config_tod_tariff"] > 0
+        assert first_counts["users"] >= 5

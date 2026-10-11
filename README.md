@@ -34,16 +34,35 @@ The FastAPI backend is structured into modular layers (`api/v1`, `services`, `db
 - **Consistent Error Envelope**: All 4xx/5xx responses adhere to `{"error": {"code": "...", "message": "...", "details": ...}}`.
 
 ### Version 1 Routes (`/api/v1`)
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/clusters` | Transformer capacity (kVA), PF, and cluster station list |
-| `GET` | `/api/v1/stations` | Paginated stations list (`?page=1&page_size=10`) |
-| `GET` | `/api/v1/forecast` | Calibrated P10/P50/P90 load forecasts with 80%/90% limits |
-| `GET` | `/api/v1/transformer/{id}/risk` | Transformer risk assessment, peak load %, and alert levels |
-| `GET` | `/api/v1/metrics/simulation` | Comparative metrics (FCFS vs. Smart Dispatch, peak shaving) |
-| `POST` | `/api/v1/recommend` | Top-3 ranked stations and slots (`fastest`, `balanced`, `grid_friendly`) |
-| `POST` | `/api/v1/replay/start` | Initialize accelerated simulation replay session |
-| `WS` | `/ws/live` | Live WebSocket telemetry and event stream |
+| Method | Endpoint | Description | Auth / Scope |
+|---|---|---|---|
+| `POST` | `/api/v1/auth/login` | Authenticate with username & password; issues access & refresh tokens | Public |
+| `POST` | `/api/v1/auth/refresh` | Rotate access & refresh tokens | Refresh Token |
+| `GET` | `/api/v1/auth/me` | Current user identity, role, and cluster assignment | Bearer Token |
+| `GET` | `/api/v1/clusters` | Transformer capacity (kVA), PF, and cluster station list | Public / Operator Scoped |
+| `GET` | `/api/v1/clusters/{id}` | Specific cluster topology (RLS & operator boundary enforced) | Operator/Admin/Judge |
+| `GET` | `/api/v1/stations` | Paginated stations list (`?page=1&page_size=10`) | Public / Operator Scoped |
+| `GET` | `/api/v1/forecast` | Calibrated P10/P50/P90 load forecasts with 80%/90% limits | Public / Operator Scoped |
+| `GET` | `/api/v1/transformer/{id}/risk` | Transformer risk assessment and early warning alerts | Operator Scoped |
+| `GET` | `/api/v1/metrics/simulation` | Comparative metrics (FCFS vs. Smart Dispatch, peak shaving) | Operator/Admin/Judge |
+| `POST` | `/api/v1/recommend` | Top-3 ranked stations and slots (`fastest`, `balanced`, `grid_friendly`) | Driver/Operator/Admin |
+| `POST` | `/api/v1/replay/start` | Initialize accelerated simulation replay session | Operator / Admin |
+| `WS` | `/ws/live` | Live WebSocket telemetry and event stream | Public / Live Stream |
+
+### Authentication & Role-Based Access Control (RBAC)
+
+The system enforces authentication using JWT (15-minute access token, 7-day refresh token) and Argon2id password hashing.
+
+- **Operator Isolation**: Operators can only access their assigned `cluster_id`. Cross-cluster attempts are rejected with `403 CROSS_CLUSTER_ACCESS_DENIED`. PostgreSQL Row-Level Security (RLS) is enforced via `SET LOCAL app.cluster_id = :cid`.
+- **Read-Only Demo User for Judges**: A dedicated `judge` account allows full cross-cluster inspection with write protection.
+
+| Username | Password | Role | Cluster | Description |
+|---|---|---|---|---|
+| `judge_demo` | `JudgeDemo2026!` | `judge` | All (Global) | Read-only evaluation account for competition judges |
+| `operator_c1` | `OperatorC1_2026!` | `operator` | `C1` | Substation operator for Metro Central Cluster |
+| `operator_c2` | `OperatorC2_2026!` | `operator` | `C2` | Cross-cluster operator for multi-tenant boundary tests |
+| `driver_demo` | `DriverDemo2026!` | `driver` | None | EV commuter seeking slot recommendations |
+| `admin_demo` | `AdminDemo2026!` | `admin` | All (Global) | Unrestricted system administrator |
 
 ## Run
 

@@ -27,8 +27,10 @@ from app.db.models import (
     ConfigDeratingCurve,
     ConfigTodTariff,
     StationEdge,
+    User,
 )
 from app.graph.routing import build_station_edges
+from app.services.user_service import UserService
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -260,6 +262,9 @@ def seed_cluster(db: Session) -> Dict[str, int]:
             is_synthetic=True,
         ))
 
+    # 8. Seed RBAC Users (read-only judge, operators, drivers, admins)
+    UserService.seed_demo_users_to_db(db)
+
     db.commit()
 
     # Collect row counts for validation
@@ -275,8 +280,10 @@ def seed_cluster(db: Session) -> Dict[str, int]:
         "weather": db.query(Weather).count(),
         "station_load": db.query(StationLoad).count(),
         "sessions": db.query(EvSession).count(),
+        "users": db.query(User).count(),
     }
     return counts
+
 
 
 def run_seed():

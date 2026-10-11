@@ -99,3 +99,32 @@ class ReplayStartResponse(BaseModel):
     status: str = Field(..., examples=["running"])
     total_ticks: int = Field(..., examples=[1440])
     current_tick: int = Field(..., examples=[0])
+
+
+# ==============================================================================
+# Authentication Schemas
+# ==============================================================================
+
+class LoginRequest(BaseModel):
+    username: str = Field(..., examples=["operator_c1"], description="User account username")
+    password: str = Field(..., examples=["OperatorC1_2026!"], description="Plaintext account password")
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str = Field(..., examples=["eyJhbGciOiJIUzI1Ni..."], description="Valid refresh token")
+
+
+class UserProfileResponse(BaseModel):
+    username: str = Field(..., examples=["operator_c1"])
+    role: str = Field(..., examples=["operator"], description="Role: driver, operator, admin, judge")
+    cluster_id: Optional[str] = Field(None, examples=["C1"], description="Cluster identifier assigned to operator")
+    email: Optional[str] = Field(None, examples=["operator_c1@cluster.ev"])
+
+
+class TokenResponse(BaseModel):
+    access_token: str = Field(..., examples=["eyJhbGciOiJIUzI1Ni..."])
+    refresh_token: str = Field(..., examples=["eyJhbGciOiJIUzI1Ni..."])
+    token_type: str = Field("bearer", examples=["bearer"])
+    expires_in: int = Field(900, examples=[900], description="Access token expiration in seconds")
+    user: UserProfileResponse
+

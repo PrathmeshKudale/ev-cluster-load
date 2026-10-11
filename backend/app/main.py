@@ -34,6 +34,7 @@ CLUSTER_PCT, STATION_UTIL, MODEL_VERSION = ForecastService.get_cluster_and_stati
 level = TransformerService.level
 
 TAGS_METADATA = [
+    {"name": "Authentication", "description": "JWT authentication, token refresh, and user identity profile"},
     {"name": "Clusters", "description": "Cluster topology, transformer capacity, and connected stations"},
     {"name": "Stations", "description": "Charging stations with pagination and charger capacities"},
     {"name": "Forecast", "description": "Calibrated P10/P50/P90 quantile load predictions"},
