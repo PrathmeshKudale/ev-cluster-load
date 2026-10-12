@@ -80,7 +80,7 @@ export const StationMap = React.memo(function StationMap({
       }).addTo(map as L.Map)
 
       // Marker cluster group
-      const group = (L as unknown as { markerClusterGroup: () => unknown }).markerClusterGroup({
+      const group = (L as unknown as { markerClusterGroup: (options?: unknown) => unknown }).markerClusterGroup({
         spiderfyOnMaxZoom: true,
         showCoverageOnHover: false,
         zoomToBoundsOnClick: true,

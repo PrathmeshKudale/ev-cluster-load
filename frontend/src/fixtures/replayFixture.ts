@@ -1,6 +1,6 @@
 export interface ReplayStateFixture {
   is_playing: boolean
-  speed_multiplier: 1 | 10 | 60
+  speed_multiplier: 1 | 10 | 60 | 1440
   current_step_hours: number
   total_horizon_hours: number
   start_timestamp: string

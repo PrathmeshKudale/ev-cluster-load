@@ -23,26 +23,26 @@ export type PriorityMode = (typeof PRIORITY_MODES)[number]
 export const driverRequestSchema = z
   .object({
     battery_pct: z
-      .number({ invalid_type_error: 'Enter a number between 5 and 95' })
+      .number({ message: 'Enter a number between 5 and 95' })
       .min(5, 'Current battery must be at least 5 % — plug in before it runs lower')
       .max(95, 'Current battery cannot exceed 95 %'),
 
     target_pct: z
-      .number({ invalid_type_error: 'Enter a number between 20 and 100' })
+      .number({ message: 'Enter a number between 20 and 100' })
       .min(20, 'Target must be at least 20 % — choose a meaningful charge level')
       .max(100, 'Target cannot exceed 100 %'),
 
     connector_type: z.enum(CONNECTOR_TYPES, {
-      errorMap: () => ({ message: 'Select a connector type from the list' }),
+      message: 'Select a connector type from the list',
     }),
 
     departure_window_h: z
-      .number({ invalid_type_error: 'Enter a number between 0.5 and 12' })
+      .number({ message: 'Enter a number between 0.5 and 12' })
       .min(0.5, 'Departure window must be at least 30 minutes (0.5 h)')
       .max(12, 'Departure window cannot exceed 12 hours — use overnight scheduling instead'),
 
     priority_mode: z.enum(PRIORITY_MODES, {
-      errorMap: () => ({ message: 'Select a priority mode' }),
+      message: 'Select a priority mode',
     }),
   })
   .refine((d) => d.target_pct > d.battery_pct, {
@@ -66,32 +66,32 @@ export const DRIVER_REQUEST_DEFAULTS: DriverRequestValues = {
 export const operatorSettingsSchema = z
   .object({
     transformer_kva: z
-      .number({ invalid_type_error: 'Enter kVA between 10 and 2000' })
+      .number({ message: 'Enter kVA between 10 and 2000' })
       .min(10, 'Transformer must be rated at least 10 kVA')
       .max(2000, 'Transformer rating cannot exceed 2000 kVA in this system'),
 
     warn_threshold_pct: z
-      .number({ invalid_type_error: 'Enter a percentage between 50 and 98' })
+      .number({ message: 'Enter a percentage between 50 and 98' })
       .min(50, 'Warning threshold must be at least 50 %')
       .max(98, 'Warning threshold cannot exceed 98 %'),
 
     crit_threshold_pct: z
-      .number({ invalid_type_error: 'Enter a percentage between 51 and 99' })
+      .number({ message: 'Enter a percentage between 51 and 99' })
       .min(51, 'Critical threshold must be at least 51 %')
       .max(99, 'Critical threshold cannot exceed 99 %'),
 
     weight_queue: z
-      .number({ invalid_type_error: 'Enter a weight between 0 and 1' })
+      .number({ message: 'Enter a weight between 0 and 1' })
       .min(0, 'Weight cannot be negative')
       .max(1, 'Weight cannot exceed 1.0'),
 
     weight_distance: z
-      .number({ invalid_type_error: 'Enter a weight between 0 and 1' })
+      .number({ message: 'Enter a weight between 0 and 1' })
       .min(0, 'Weight cannot be negative')
       .max(1, 'Weight cannot exceed 1.0'),
 
     weight_grid: z
-      .number({ invalid_type_error: 'Enter a weight between 0 and 1' })
+      .number({ message: 'Enter a weight between 0 and 1' })
       .min(0, 'Weight cannot be negative')
       .max(1, 'Weight cannot exceed 1.0'),
   })

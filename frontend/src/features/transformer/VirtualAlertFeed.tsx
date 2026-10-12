@@ -34,6 +34,9 @@ interface AlertRowProps {
 }
 
 const AlertRow = React.memo(function AlertRow({ item, onAck, style }: AlertRowProps) {
+  const lvl = item.level ?? (item.severity === 'crit' ? 'critical' : item.severity === 'warn' ? 'warning' : 'info')
+  const entityId = item.station_id ?? item.entity_id ?? ''
+
   return (
     <div
       style={{
@@ -45,18 +48,18 @@ const AlertRow = React.memo(function AlertRow({ item, onAck, style }: AlertRowPr
         marginBottom: '4px',
         borderRadius: 'var(--radius-sm)',
         opacity: item.acknowledged ? 0.55 : 1,
-        ...severityBg(item.level),
+        ...severityBg(lvl),
       }}
       role="listitem"
-      aria-label={`${item.level} alert: ${item.message}`}
+      aria-label={`${lvl} alert: ${item.message}`}
     >
-      {severityIcon(item.level)}
+      {severityIcon(lvl)}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
           {item.message}
         </div>
         <div style={{ fontSize: '11px', color: 'var(--color-text-muted)', marginTop: '2px' }}>
-          {item.station_id} · {new Date(item.timestamp).toLocaleTimeString()}
+          {entityId} · {new Date(item.timestamp).toLocaleTimeString()}
         </div>
       </div>
       {!item.acknowledged && (

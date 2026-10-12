@@ -19,6 +19,7 @@ from app.core.config import (
     TRANSFORMER_KVA,
     WARN_THRESHOLD,
 )
+from app.ml.shap_explainer import ShapExplainer
 from app.services.forecast_service import ForecastService
 
 # Saaty Random Index (RI) table for matrix sizes n = 1 .. 10
@@ -202,7 +203,17 @@ class RecommendationService:
         for cand in sorted(pool, key=lambda c: c["score"]):
             best_per_station.setdefault(cand["station_id"], cand)
 
-        return list(best_per_station.values())[:3]
+        top3 = list(best_per_station.values())[:3]
+        for c in top3:
+            st_cfg = next((s for s in stations if s["id"] == c["station_id"]), {})
+            c["shap_reasons"] = ShapExplainer.explain_candidate(
+                station_id=c["station_id"],
+                hour=c["hour"],
+                charger_kw=float(st_cfg.get("kw", 7.4)),
+                total_chargers=int(st_cfg.get("chargers", 4)),
+            )
+
+        return top3
 
     @classmethod
     def assign_batch_drivers_cp_sat(

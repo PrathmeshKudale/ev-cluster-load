@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/z1-replay-shap
+- **WebSocket Replay Engine (1x up to 1440x)**:
+  - Implemented accelerated day simulation replay streaming on `/ws/replay` and `/api/v1/ws/replay` in `backend/app/api/v1/routers/websockets.py`.
+  - ReplayService generates complete 1440-minute simulated day frames (1 tick = 1 minute) at speeds up to 1440x (a full 24h day finishes in ~60 seconds).
+  - Streams dynamic cluster demand, per-station bay occupancies, Erlang-C queue delay times, 80% warn / 90% crit threshold alerts, and dynamic recommendations.
+  - Interactive WebSocket controls supporting `start`, `pause`, `resume`, `seek`, `speed`, and `stop`.
+- **SHAP TreeExplainer for LightGBM Quantile Forecast**:
+  - Implemented `ShapExplainer` in `backend/app/ml/shap_explainer.py` wrapping `shap.TreeExplainer` on the trained LightGBM quantile regression model.
+  - Extracts exact feature attributions for input features (`hour`, `temperature`, `lag_1h`, `rolling_mean_4h`, `chargers_available`, `active_sessions`).
+  - Attached top-3 SHAP attribution reasons to every candidate recommendation in `RecommendationService.get_top3_recommendations()`.
+- **Frontend Live Replay Dashboard & Explainability Why Drawer**:
+  - Updated `ReplayControls` to support 1440x playback speed with intuitive timeline scrubber.
+  - Revamped `ReplayPage` with real-time transformer loading telemetry meter, dynamic active alerts feed, hub queue congestion monitor, and tick-by-tick recommendation updates.
+  - Added "LightGBM TreeExplainer (Top 3 SHAP Attributions)" section into `RecommendationCard` Why Drawer displaying real model reasons alongside queue wait, detour, and overload risk.
+- **Verification & Acceptance Test Suite**:
+  - Added `backend/tests/test_replay_shap.py` testing TreeExplainer initialization, SHAP feature rankings, 1440x replay frame generation, and `/ws/replay` WebSocket streaming.
+  - Added `frontend/src/features/recommend/__tests__/WhyDrawerShap.test.tsx` verifying Why Drawer opens and renders real TreeSHAP output.
+
 ### Added - feat/b4-db
 - **SQLAlchemy 2 Async with asyncpg Engine**:
   - Implemented async engine (`async_engine`) and session factory (`AsyncSessionLocal`) using `postgresql+asyncpg://` in `backend/app/db/connection.py`.

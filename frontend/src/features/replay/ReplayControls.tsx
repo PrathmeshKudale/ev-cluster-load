@@ -20,7 +20,7 @@ import { replayFixture, type ReplayStateFixture } from '@/fixtures/replayFixture
 export interface ReplayControlsProps {
   initialState?: ReplayStateFixture
   onPlayChange?: (isPlaying: boolean) => void
-  onSpeedChange?: (speed: 1 | 10 | 60) => void
+  onSpeedChange?: (speed: 1 | 10 | 60 | 1440) => void
   onSeek?: (stepHours: number) => void
 }
 
@@ -31,7 +31,7 @@ export const ReplayControls: React.FC<ReplayControlsProps> = ({
   onSeek,
 }) => {
   const [isPlaying, setIsPlaying] = useState(initialState.is_playing)
-  const [speed, setSpeed] = useState<1 | 10 | 60>(initialState.speed_multiplier)
+  const [speed, setSpeed] = useState<1 | 10 | 60 | 1440>(initialState.speed_multiplier)
   const [currentStep, setCurrentStep] = useState(initialState.current_step_hours)
 
   const togglePlay = () => {
@@ -40,7 +40,7 @@ export const ReplayControls: React.FC<ReplayControlsProps> = ({
     onPlayChange?.(next)
   }
 
-  const handleSpeedSelect = (s: 1 | 10 | 60) => {
+  const handleSpeedSelect = (s: 1 | 10 | 60 | 1440) => {
     setSpeed(s)
     onSpeedChange?.(s)
   }
@@ -165,13 +165,14 @@ export const ReplayControls: React.FC<ReplayControlsProps> = ({
             <span style={{ fontSize: '13px', color: 'var(--color-ink-300)', marginRight: '4px' }}>
               Speed:
             </span>
-            {([1, 10, 60] as const).map((s) => (
+            {([1, 10, 60, 1440] as const).map((s) => (
               <Button
                 key={s}
                 variant={speed === s ? 'primary' : 'outline'}
                 size="sm"
                 onClick={() => handleSpeedSelect(s)}
                 style={{ padding: '4px 10px', minHeight: '32px' }}
+                title={s === 1440 ? '1440x: 24-hour day in 1 minute' : `${s}x realtime`}
               >
                 {s}x
               </Button>

@@ -33,8 +33,12 @@ def aggregate_sessions_to_hourly_load(
 
     for s in stations:
         sid = s["id"]
-        capacity_kw = s["capacity_kw"]
-        chargers_count = s["chargers"]
+        chargers_count = s.get("chargers", 1)
+        # Support both explicit "capacity_kw" and per-charger "kw" × "chargers" schema
+        if "capacity_kw" in s:
+            capacity_kw = s["capacity_kw"]
+        else:
+            capacity_kw = s.get("kw", 7.4) * chargers_count
 
         # Filter sessions belonging to this station
         s_sessions = [sess for sess in sessions if sess["station_id"] == sid]

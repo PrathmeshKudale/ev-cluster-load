@@ -1,9 +1,11 @@
 export interface AlertItem {
   id: string
   timestamp: string
-  severity: 'info' | 'warn' | 'crit'
-  entity_type: 'transformer' | 'station' | 'grid'
-  entity_id: string
+  severity?: 'info' | 'warn' | 'crit'
+  level?: 'info' | 'warn' | 'crit' | 'critical' | 'warning' | 'ok' | string
+  entity_type?: 'transformer' | 'station' | 'grid'
+  entity_id?: string
+  station_id?: string
   message: string
   action_label?: string
   acknowledged?: boolean

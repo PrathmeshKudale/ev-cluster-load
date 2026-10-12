@@ -24,6 +24,7 @@ export interface CandidateRecommendation {
     }
   }
   why_reason: string
+  shap_reasons?: string[]
 }
 
 export interface RecommendationFixture {
@@ -58,6 +59,11 @@ export const recommendationFixture: RecommendationFixture = {
       },
       why_reason:
         'Market Road has 4 vacant bays, 0 minutes of detour from your corridor, and zero Erlang-C queue delay. Loading remains safely below the 80% warning limit at 52.0%.',
+      shap_reasons: [
+        'Station bay headroom availability (-5.42 kW effect)',
+        'Diurnal afternoon lull timing (-3.85 kW effect)',
+        'Recent 1-hour load persistence (-1.20 kW effect)',
+      ],
     },
     {
       rank: 2,
@@ -81,6 +87,11 @@ export const recommendationFixture: RecommendationFixture = {
       },
       why_reason:
         'Station Plaza provides 2 available bays with a minor 4-minute detour and ~4 minutes expected queuing time. Grid loading is well within safe thresholds.',
+      shap_reasons: [
+        'Moderate bay occupancy (+2.65 kW effect)',
+        'Ambient temperature HVAC modifier (+0.84 kW effect)',
+        'Weekday traffic profile (+0.42 kW effect)',
+      ],
     },
     {
       rank: 3,
@@ -104,6 +115,11 @@ export const recommendationFixture: RecommendationFixture = {
       },
       why_reason:
         'College Gate is operating near capacity (5/6 bays full). Waiting 1 hour for the 15:00 slot reduces queue time and relieves evening peak congestion.',
+      shap_reasons: [
+        'Active concurrent charging sessions (+8.15 kW effect)',
+        '4-hour rolling demand trend (+3.20 kW effect)',
+        'Previous day historical baseline (+1.45 kW effect)',
+      ],
     },
   ],
 }

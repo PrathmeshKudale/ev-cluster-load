@@ -6,8 +6,14 @@
 import React, { useMemo } from 'react'
 import { useECharts } from '@/hooks/useECharts'
 
-interface TransformerGaugeProps {
-  peakPct: number         // current load as % of transformer rating (0–100)
+export interface TransformerGaugeProps {
+  peakPct?: number         // current load as % of transformer rating (0–100)
+  data?: {
+    loading_percent?: number
+    current_load_pct?: number
+    rating_kva?: number
+    [key: string]: any
+  }
   warnThreshold?: number  // default 80
   critThreshold?: number  // default 90
   label?: string
@@ -23,13 +29,16 @@ function getSeverityColor(pct: number, warn: number, crit: number): string {
 
 export const TransformerGauge = React.memo(function TransformerGauge({
   peakPct,
+  data,
   warnThreshold = 80,
   critThreshold = 90,
   label = 'Transformer Load',
   kva,
   height = 260,
 }: TransformerGaugeProps) {
-  const pct = Math.max(0, Math.min(100, peakPct))
+  const effectivePct = peakPct ?? data?.loading_percent ?? data?.current_load_pct ?? 0
+  const effectiveKva = kva ?? data?.rating_kva
+  const pct = Math.max(0, Math.min(100, effectivePct))
   const color = getSeverityColor(pct, warnThreshold, critThreshold)
 
   const option = useMemo(() => ({
@@ -54,7 +63,11 @@ export const TransformerGauge = React.memo(function TransformerGauge({
         axisLine: {
           lineStyle: {
             width: 18,
-            color: [[1, 'var(--color-border)']],
+            color: [
+              [warnThreshold / 100, 'var(--color-safe-green-bg)'],
+              [critThreshold / 100, 'var(--color-warn-amber-bg)'],
+              [1, 'var(--color-crit-red-bg)'],
+            ],
           },
         },
         axisTick: { show: false },
@@ -106,23 +119,12 @@ export const TransformerGauge = React.memo(function TransformerGauge({
         data: [
           {
             value: Math.round(pct * 10) / 10,
-            name: kva ? `${label}\n${kva} kVA rated` : label,
+            name: effectiveKva ? `${label}\n${effectiveKva} kVA rated` : label,
           },
         ],
-        // Severity bands in the background arc
-        axisLine: {
-          lineStyle: {
-            width: 18,
-            color: [
-              [warnThreshold / 100, 'var(--color-safe-green-bg)'],
-              [critThreshold / 100, 'var(--color-warn-amber-bg)'],
-              [1, 'var(--color-crit-red-bg)'],
-            ],
-          },
-        },
       },
     ],
-  }), [pct, color, warnThreshold, critThreshold, label, kva])
+  }), [pct, color, warnThreshold, critThreshold, label, effectiveKva])
 
   const ref = useECharts(option)
 

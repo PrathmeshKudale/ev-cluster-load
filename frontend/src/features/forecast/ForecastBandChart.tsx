@@ -8,13 +8,25 @@
 import React, { useMemo } from 'react'
 import { useECharts } from '@/hooks/useECharts'
 
-interface ForecastBandChartProps {
-  hours: number[]
-  p10: number[]
-  p50: number[]
-  p90: number[]
+export interface ForecastBandChartProps {
+  hours?: number[]
+  p10?: number[]
+  p50?: number[]
+  p90?: number[]
+  data?: {
+    hours?: number[]
+    p10?: number[]
+    p50?: number[]
+    p90?: number[]
+    warn?: number
+    critical?: number
+    warn_threshold_pct?: number
+    crit_threshold_pct?: number
+    [key: string]: any
+  }
   warnThreshold?: number   // default 80
   critThreshold?: number   // default 90
+  onHoverHour?: (hour: number | null) => void
   height?: number
   'aria-label'?: string
 }
@@ -31,26 +43,35 @@ export const ForecastBandChart = React.memo(function ForecastBandChart({
   p10,
   p50,
   p90,
-  warnThreshold = 80,
-  critThreshold = 90,
+  data,
+  warnThreshold,
+  critThreshold,
+  onHoverHour: _onHoverHour,
   height = 320,
   'aria-label': ariaLabel = 'Transformer load forecast band chart',
 }: ForecastBandChartProps) {
   const MAX_POINTS = 500
 
+  const hArr = hours ?? data?.hours ?? Array.from({ length: 24 }, (_, i) => i)
+  const p10Arr = p10 ?? data?.p10 ?? []
+  const p50Arr = p50 ?? data?.p50 ?? []
+  const p90Arr = p90 ?? data?.p90 ?? []
+  const warn = warnThreshold ?? data?.warn ?? data?.warn_threshold_pct ?? 80
+  const crit = critThreshold ?? data?.critical ?? data?.crit_threshold_pct ?? 90
+
   // Downsample all series together
   const ds = useMemo(() => {
-    const n = hours.length
-    if (n <= MAX_POINTS) return { hours, p10, p50, p90 }
+    const n = hArr.length
+    if (n <= MAX_POINTS) return { hours: hArr, p10: p10Arr, p50: p50Arr, p90: p90Arr }
     const step = n / MAX_POINTS
     const idx = Array.from({ length: MAX_POINTS }, (_, i) => Math.round(i * step))
     return {
-      hours: idx.map(i => hours[i]),
-      p10:   idx.map(i => p10[i]),
-      p50:   idx.map(i => p50[i]),
-      p90:   idx.map(i => p90[i]),
+      hours: idx.map(i => hArr[i]),
+      p10:   idx.map(i => p10Arr[i]),
+      p50:   idx.map(i => p50Arr[i]),
+      p90:   idx.map(i => p90Arr[i]),
     }
-  }, [hours, p10, p50, p90])
+  }, [hArr, p10Arr, p50Arr, p90Arr])
 
   const option = useMemo(() => ({
     backgroundColor: 'transparent',

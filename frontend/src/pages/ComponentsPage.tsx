@@ -177,7 +177,7 @@ export const ComponentsPage: React.FC = () => {
         <div>
           <ForecastBandChart
             data={forecastFixture}
-            onHoverHour={(h) => setSelectedHour(h)}
+            onHoverHour={(h: number | null) => setSelectedHour(h)}
           />
         </div>
       </section>

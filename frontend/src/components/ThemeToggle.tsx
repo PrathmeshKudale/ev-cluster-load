@@ -5,7 +5,8 @@
  */
 import React from 'react'
 import { Sun, Moon, Monitor } from 'lucide-react'
-import { useTheme, ThemeMode } from '@/hooks/useTheme'
+import { useTheme } from '@/hooks/useTheme'
+import type { ThemeMode } from '@/hooks/useTheme'
 
 const MODES: ThemeMode[] = ['system', 'light', 'dark']
 const LABELS: Record<ThemeMode, string> = {

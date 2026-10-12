@@ -75,6 +75,17 @@ class CandidateSlot(BaseModel):
     detour_min: float = Field(..., examples=[0.0])
     grid_load_pct: float = Field(..., examples=[68.5])
     score: float = Field(..., examples=[0.245])
+    shap_reasons: List[str] = Field(
+        default_factory=list,
+        examples=[
+            [
+                "Active concurrent charging sessions (+11.42 kW effect)",
+                "Station bay headroom availability (+5.49 kW effect)",
+                "24-hour mean station throughput (+1.00 kW effect)",
+            ]
+        ],
+        description="Top-3 feature attribution reasons from real SHAP TreeExplainer output",
+    )
 
 
 class RecommendResponse(BaseModel):

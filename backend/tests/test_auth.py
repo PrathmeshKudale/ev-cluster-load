@@ -13,6 +13,7 @@ Covers:
 """
 import subprocess
 from datetime import timedelta
+from pathlib import Path
 from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
@@ -332,6 +333,7 @@ def test_no_secrets_committed_in_git():
         assert not filename.endswith(".env"), f"Found uncommitted or staged .env file: {filename}"
 
     # Verify .env is listed in .gitignore
-    with open(".gitignore", "r", encoding="utf-8") as f:
+    gitignore_path = Path(".gitignore") if Path(".gitignore").exists() else Path(__file__).resolve().parents[2] / ".gitignore"
+    with open(gitignore_path, "r", encoding="utf-8") as f:
         gitignore_content = f.read()
     assert ".env" in gitignore_content, ".env must be explicitly excluded in .gitignore"

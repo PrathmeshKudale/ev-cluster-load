@@ -61,7 +61,7 @@ export function useECharts(option: EChartsOption | null) {
       const optWithMotion = prefersReducedMotion
         ? { ...option, animation: false }
         : option
-      ;(chartRef.current as { setOption: (o: unknown) => void }).setOption(
+      ;(chartRef.current as { setOption: (o: unknown, opts?: unknown) => void }).setOption(
         optWithMotion,
         { notMerge: false, lazyUpdate: true }
       )

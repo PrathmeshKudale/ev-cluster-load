@@ -193,7 +193,7 @@ export const AlertFeed: React.FC<AlertFeedProps> = ({
                         variant={isCrit ? 'crit' : isWarn ? 'warn' : 'brand'}
                         style={{ fontSize: '10px', padding: '2px 6px' }}
                       >
-                        {item.entity_type.toUpperCase()} • {item.entity_id}
+                        {(item.entity_type ?? 'ALERT').toUpperCase()} • {item.entity_id ?? item.id}
                       </Badge>
 
                       <span
