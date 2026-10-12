@@ -1,0 +1,36 @@
+{
+  "ci": {
+    "collect": {
+      "url": ["http://localhost:5173/driver", "http://localhost:5173/operator"],
+      "startServerCommand": "npm run preview --prefix frontend",
+      "startServerReadyPattern": "Local:",
+      "numberOfRuns": 3,
+      "settings": {
+        "preset": "desktop",
+        "chromeFlags": "--no-sandbox --headless --disable-gpu"
+      }
+    },
+    "assert": {
+      "preset": "lighthouse:no-pwa",
+      "assertions": {
+        "categories:performance": ["error", { "minScore": 0.90 }],
+        "categories:accessibility": ["warn",  { "minScore": 0.90 }],
+        "categories:best-practices": ["warn",  { "minScore": 0.85 }],
+        "categories:seo": ["warn",  { "minScore": 0.80 }],
+
+        "resource-summary:script:size":     ["error", { "maxNumericValue": 512000 }],
+        "resource-summary:stylesheet:size": ["error", { "maxNumericValue": 51200  }],
+        "resource-summary:total:size":      ["warn",  { "maxNumericValue": 1048576}],
+
+        "first-contentful-paint":            ["warn",  { "maxNumericValue": 2000 }],
+        "largest-contentful-paint":          ["warn",  { "maxNumericValue": 3500 }],
+        "total-blocking-time":               ["warn",  { "maxNumericValue": 300  }],
+        "cumulative-layout-shift":           ["warn",  { "maxNumericValue": 0.1  }],
+        "interactive":                       ["warn",  { "maxNumericValue": 4000 }]
+      }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}
