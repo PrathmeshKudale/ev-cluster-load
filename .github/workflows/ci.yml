@@ -55,3 +55,51 @@ jobs:
       # Step 6: Run full pytest suite against live TimescaleDB instance
       - name: Run test suite
         run: python -m pytest -v
+
+      # Step 7: Deep-model pipeline smoke-test (CPU, 2 days data, 2 epochs)
+      # Validates imports, data wiring, and forward passes without requiring GPU.
+      # Full training (epochs=50) is done in the Colab notebook (notebooks/deep_stgnn_training.ipynb).
+      - name: ML model smoke-test
+        env:
+          MLFLOW_DISABLE_AGENT_HINT: "1"
+        run: |
+          python - <<'EOF'
+          from app.ml.deep_train import run_ablation_study
+          result = run_ablation_study(days=2, epochs=2, batch_size=8, seq_len=24, horizon=12, save_dir="../results/ci_smoke")
+          df = result["df_ablation"]
+          assert len(df) == 8, f"Expected 8 ablation rows, got {len(df)}"
+          assert (df["mae"] >= 0).all(), "Negative MAE detected"
+          assert result["active_default_model"] in df["model"].values
+          print("Smoke-test PASSED:", result["active_default_model"], "selected as default")
+          EOF
+
+      # Step 8: SimPy simulation smoke-test (3 seeds, 24h window)
+      # Validates the full DES pipeline: arrivals, dispatch policies, transformer
+      # monitoring, metric aggregation, chart generation, and JSON output.
+      - name: SimPy simulation smoke-test
+        env:
+          MLFLOW_DISABLE_AGENT_HINT: "1"
+        run: |
+          python - <<'EOF'
+          import json, pathlib
+          from app.sim.runner import run_simulation_study
+          result = run_simulation_study(
+              n_seeds=3,
+              sim_duration_hours=24,
+              data_days=7,
+              out_dir="../results/ci_sim_smoke",
+              generate_charts=True,
+          )
+          summary_path = pathlib.Path("../results/ci_sim_smoke/sim_summary.json")
+          assert summary_path.exists(), "sim_summary.json not created"
+          with open(summary_path) as f:
+              s = json.load(f)
+          assert "measurement_note" in s, "measurement_note missing"
+          for policy in ("fcfs", "smart"):
+              for metric in ("avg_wait_time_min", "transformer_peak_kva",
+                             "overload_intervals", "utilization_gini", "energy_served_kwh"):
+                  assert metric in s["policies"][policy]["metrics"], f"{metric} missing for {policy}"
+                  desc = s["policies"][policy]["metrics"][metric]["description"]
+                  assert "[DES]" in desc, f"[DES] label missing on {metric} for {policy}"
+          print("SimPy smoke-test PASSED — all metrics present and labelled [DES]")
+          EOF

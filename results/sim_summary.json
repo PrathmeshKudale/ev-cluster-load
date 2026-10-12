@@ -1,0 +1,149 @@
+{
+  "title": "EV Cluster Load Discrete-Event Simulation Study",
+  "measurement_note": "All metrics are labelled [DES] to indicate they are measured in discrete-event simulation using SimPy. They reflect simulation behaviour under empirically bootstrapped arrival distributions and should not be extrapolated to real-world deployments without validation on live data.",
+  "generated_at": "2026-10-12T14:58:56.304434Z",
+  "policies": {
+    "fcfs": {
+      "policy": "fcfs",
+      "n_seeds": 30,
+      "measurement": "discrete-event simulation (SimPy)",
+      "sim_duration_hours": 168.0,
+      "transformer_kva_limit": 100.0,
+      "metrics": {
+        "avg_wait_time_min": {
+          "description": "[DES] Mean minutes from EV arrival to charger plug-in start",
+          "mean": 0.3914,
+          "ci95_half_width": 0.1563,
+          "unit": "minutes"
+        },
+        "p95_wait_time_min": {
+          "description": "[DES] 95th-percentile wait time across all EVs",
+          "mean": 0.5625,
+          "ci95_half_width": 0.8044,
+          "unit": "minutes"
+        },
+        "transformer_peak_kva": {
+          "description": "[DES] Maximum instantaneous cluster kVA (pf=0.95)",
+          "mean": 97.033,
+          "ci95_half_width": 3.2934,
+          "unit": "kVA"
+        },
+        "overload_intervals": {
+          "description": "[DES] Count of 15-min windows where cluster kVA exceeded 100 kVA limit",
+          "mean": 0.6667,
+          "ci95_half_width": 0.2831,
+          "unit": "15-min intervals"
+        },
+        "utilization_gini": {
+          "description": "[DES] Gini coefficient of per-station utilization rates (0=perfectly equal, 1=monopoly)",
+          "mean": 0.2346,
+          "ci95_half_width": 0.0121,
+          "unit": "dimensionless [0, 1]"
+        },
+        "energy_served_kwh": {
+          "description": "[DES] Total energy delivered to all EVs over the simulation horizon",
+          "mean": 6164.13,
+          "ci95_half_width": 294.4756,
+          "unit": "kWh"
+        }
+      }
+    },
+    "smart": {
+      "policy": "smart",
+      "n_seeds": 30,
+      "measurement": "discrete-event simulation (SimPy)",
+      "sim_duration_hours": 168.0,
+      "transformer_kva_limit": 100.0,
+      "metrics": {
+        "avg_wait_time_min": {
+          "description": "[DES] Mean minutes from EV arrival to charger plug-in start",
+          "mean": 0.0081,
+          "ci95_half_width": 0.0083,
+          "unit": "minutes"
+        },
+        "p95_wait_time_min": {
+          "description": "[DES] 95th-percentile wait time across all EVs",
+          "mean": 0.0,
+          "ci95_half_width": 0.0,
+          "unit": "minutes"
+        },
+        "transformer_peak_kva": {
+          "description": "[DES] Maximum instantaneous cluster kVA (pf=0.95)",
+          "mean": 102.0693,
+          "ci95_half_width": 3.7297,
+          "unit": "kVA"
+        },
+        "overload_intervals": {
+          "description": "[DES] Count of 15-min windows where cluster kVA exceeded 100 kVA limit",
+          "mean": 1.2667,
+          "ci95_half_width": 0.5089,
+          "unit": "15-min intervals"
+        },
+        "utilization_gini": {
+          "description": "[DES] Gini coefficient of per-station utilization rates (0=perfectly equal, 1=monopoly)",
+          "mean": 0.4391,
+          "ci95_half_width": 0.0115,
+          "unit": "dimensionless [0, 1]"
+        },
+        "energy_served_kwh": {
+          "description": "[DES] Total energy delivered to all EVs over the simulation horizon",
+          "mean": 6153.2763,
+          "ci95_half_width": 300.2838,
+          "unit": "kWh"
+        }
+      }
+    }
+  },
+  "comparison": {
+    "avg_wait_time_min": {
+      "fcfs_mean": 0.3914,
+      "smart_mean": 0.0081,
+      "delta_smart_minus_fcfs": -0.3833,
+      "smart_improvement_pct": 97.93,
+      "smart_wins": true
+    },
+    "p95_wait_time_min": {
+      "fcfs_mean": 0.5625,
+      "smart_mean": 0.0,
+      "delta_smart_minus_fcfs": -0.5625,
+      "smart_improvement_pct": 100.0,
+      "smart_wins": true
+    },
+    "transformer_peak_kva": {
+      "fcfs_mean": 97.033,
+      "smart_mean": 102.0693,
+      "delta_smart_minus_fcfs": 5.0363,
+      "smart_improvement_pct": -5.19,
+      "smart_wins": false
+    },
+    "overload_intervals": {
+      "fcfs_mean": 0.6667,
+      "smart_mean": 1.2667,
+      "delta_smart_minus_fcfs": 0.6,
+      "smart_improvement_pct": -90.0,
+      "smart_wins": false
+    },
+    "utilization_gini": {
+      "fcfs_mean": 0.2346,
+      "smart_mean": 0.4391,
+      "delta_smart_minus_fcfs": 0.2045,
+      "smart_improvement_pct": -87.17,
+      "smart_wins": false
+    },
+    "energy_served_kwh": {
+      "fcfs_mean": 6164.13,
+      "smart_mean": 6153.2763,
+      "delta_smart_minus_fcfs": -10.8537,
+      "smart_improvement_pct": -0.18,
+      "smart_wins": false
+    }
+  },
+  "chart_files": [
+    "D:\\field_project_1\\ev-cluster-load\\results\\sim_wait_time.png",
+    "D:\\field_project_1\\ev-cluster-load\\results\\sim_transformer_peak.png",
+    "D:\\field_project_1\\ev-cluster-load\\results\\sim_overload.png",
+    "D:\\field_project_1\\ev-cluster-load\\results\\sim_utilization_gini.png",
+    "D:\\field_project_1\\ev-cluster-load\\results\\sim_energy_served.png",
+    "D:\\field_project_1\\ev-cluster-load\\results\\sim_utilization_heatmap.png"
+  ]
+}

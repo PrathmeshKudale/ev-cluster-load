@@ -1,4 +1,4 @@
-"""Simulation engine package."""
-from app.sim.engine import ClusterSimulationEngine
+"""SimPy discrete-event simulation package for EV cluster load and policy benchmarking."""
+from app.sim.runner import run_simulation_study
 
-__all__ = ["ClusterSimulationEngine"]
+__all__ = ["run_simulation_study"]
