@@ -4,8 +4,9 @@
  * Focus rings, aria-invalid, aria-describedby wired for WCAG AA.
  */
 import React from 'react'
-import { FieldError } from 'react-hook-form'
+import type { FieldError } from 'react-hook-form'
 import { AlertCircle } from 'lucide-react'
+export type { FieldError }
 
 // ---------------------------------------------------------------------------
 // Utility: CSS-in-JS token shortcuts
@@ -17,6 +18,7 @@ const tokens = {
   ink300: 'var(--color-ink-300)',
   ink700: 'var(--color-ink-700)',
   ink800: 'var(--color-ink-800)',
+  ink900: 'var(--color-ink-900)',
   trafoBlue: 'var(--color-trafo-blue)',
   fontSans: 'var(--font-sans, "Atkinson Hyperlegible", sans-serif)',
   radiusMd: 'var(--radius-md, 6px)',

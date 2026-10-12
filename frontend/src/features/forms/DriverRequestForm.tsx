@@ -6,15 +6,16 @@
  * Safe defaults: 20 % → 80 %, Type 2, 2 h window, balanced mode.
  */
 import React from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   driverRequestSchema,
-  DriverRequestValues,
   DRIVER_REQUEST_DEFAULTS,
   CONNECTOR_TYPES,
   PRIORITY_MODES,
 } from './schemas'
+import type { DriverRequestValues } from './schemas'
+
 import {
   FieldWrapper,
   NumberInput,

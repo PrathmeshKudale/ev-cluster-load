@@ -6,7 +6,9 @@ import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff } from 'lucide-react'
-import { loginSchema, LoginValues, LOGIN_DEFAULTS } from './schemas'
+import { loginSchema, LOGIN_DEFAULTS } from './schemas'
+import type { LoginValues } from './schemas'
+
 import { FieldWrapper, TextInput, FormSection, SubmitButton } from './FormFields'
 
 interface LoginFormProps {

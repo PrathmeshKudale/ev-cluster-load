@@ -17,9 +17,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   operatorSettingsSchema,
-  OperatorSettingsValues,
   OPERATOR_SETTINGS_DEFAULTS,
 } from './schemas'
+import type { OperatorSettingsValues } from './schemas'
+
 import {
   FieldWrapper,
   NumberInput,

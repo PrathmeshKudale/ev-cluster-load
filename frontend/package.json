@@ -6,10 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "oxlint",
     "preview": "vite preview",
+    "lint": "oxlint",
     "test": "vitest run",
     "test:ui": "vitest --ui",
+    "test:cov": "vitest run --coverage",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "demo": "cross-env VITE_USE_MOCKS=true VITE_API_BASE_URL='' tsc -b && cross-env VITE_USE_MOCKS=true VITE_API_BASE_URL='' vite build --outDir dist-demo",
+    "demo:serve": "vite preview --outDir dist-demo --port 4173",
     "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o src/lib/openapi.d.ts"
   },
   "dependencies": {
@@ -47,13 +52,15 @@
     "@vitest/ui": "^5.0.3",
     "autoprefixer": "^10.6.1",
     "axe-core": "^4.14.0",
+    "cross-env": "^10.1.0",
     "jsdom": "^30.1.2",
     "openapi-typescript": "^6.7.6",
     "oxlint": "^1.81.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~6.0.2",
     "vite": "^8.3.0",
-    "vitest": "^5.0.3"
+    "vitest": "^5.0.3",
+    "wait-on": "^9.5.1"
   },
   "msw": {
     "workerDirectory": [
