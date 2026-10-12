@@ -1,6 +1,18 @@
-/* EV Cluster Load - Design System & Tokens */
+/* ============================================================
+   EV Cluster Load — Unified Design System
+   Tailwind CSS v4 + CSS Custom Properties (design tokens)
+   Supports: dark (default) | light themes | prefers-color-scheme
+   ============================================================ */
+
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────
+   1. DESIGN TOKENS — Dark Theme (default)
+   ────────────────────────────────────────────── */
 :root {
-  /* Color Tokens */
+  color-scheme: dark;
+
+  /* Ink palette — dark backgrounds */
   --color-ink-950: #051317;
   --color-ink-900: #0a1f24;
   --color-ink-850: #0d262d;
@@ -14,50 +26,175 @@
   --color-ink-100: #e2f1f3;
   --color-ink-50:  #f4f9fa;
 
-  /* Transformer Brand Blue */
-  --color-trafo-blue: #1e88e5;
-  --color-trafo-blue-hover: #1565c0;
-  --color-trafo-blue-tint: rgba(30, 136, 229, 0.15);
-  --color-trafo-blue-subtle: rgba(30, 136, 229, 0.08);
+  /* Surface tokens */
+  --color-surface:        var(--color-ink-950);
+  --color-surface-raised: var(--color-ink-900);
+  --color-surface-overlay:var(--color-ink-850);
+  --color-border:         var(--color-ink-700);
+  --color-text-primary:   var(--color-ink-100);
+  --color-text-secondary: var(--color-ink-300);
+  --color-text-muted:     var(--color-ink-400);
 
-  /* Amber Severity: 80% Warning Limit */
-  --color-warn-amber: #d97706;
-  --color-warn-amber-hover: #b45309;
-  --color-warn-amber-bg: rgba(217, 119, 6, 0.16);
-  --color-warn-amber-border: rgba(245, 158, 11, 0.4);
+  /* Brand blue */
+  --color-trafo-blue:        #1e88e5;
+  --color-trafo-blue-hover:  #1565c0;
+  --color-trafo-blue-tint:   rgba(30,136,229,.15);
+  --color-trafo-blue-subtle: rgba(30,136,229,.08);
 
-  /* Red Severity: 90% Critical Limit */
-  --color-crit-red: #dc2626;
-  --color-crit-red-hover: #b91c1c;
-  --color-crit-red-bg: rgba(220, 38, 38, 0.16);
-  --color-crit-red-border: rgba(239, 68, 68, 0.4);
+  /* Severity scale */
+  --color-safe-green:        #059669;
+  --color-safe-green-hover:  #047857;
+  --color-safe-green-bg:     rgba(5,150,105,.16);
+  --color-safe-green-border: rgba(16,185,129,.4);
 
-  /* Safe Green: <80% Normal */
-  --color-safe-green: #059669;
-  --color-safe-green-hover: #047857;
-  --color-safe-green-bg: rgba(5, 150, 105, 0.16);
-  --color-safe-green-border: rgba(16, 185, 129, 0.4);
+  --color-warn-amber:        #d97706;
+  --color-warn-amber-hover:  #b45309;
+  --color-warn-amber-bg:     rgba(217,119,6,.16);
+  --color-warn-amber-border: rgba(245,158,11,.4);
 
-  /* Fonts */
-  --font-sans: 'Atkinson Hyperlegible', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-crit-red:          #dc2626;
+  --color-crit-red-hover:    #b91c1c;
+  --color-crit-red-bg:       rgba(220,38,38,.16);
+  --color-crit-red-border:   rgba(239,68,68,.4);
+
+  /* ECharts / chart palette (follows severity scale) */
+  --chart-p10: rgba(5,150,105,.35);
+  --chart-p50: #1e88e5;
+  --chart-p90: rgba(220,38,38,.5);
+  --chart-warn-line: #d97706;
+  --chart-crit-line: #dc2626;
+
+  /* Typography */
+  --font-sans: 'Atkinson Hyperlegible',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  --font-mono: 'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
 
   /* Radii */
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
   --radius-xl: 24px;
+
+  /* Spacing scale */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Z-index layers */
+  --z-map:     0;
+  --z-overlay: 10;
+  --z-drawer:  100;
+  --z-toast:   200;
+  --z-modal:   300;
+
+  /* Transitions */
+  --transition-fast:   0.1s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow:   0.35s ease;
 }
 
-* {
+/* ──────────────────────────────────────────────
+   2. LIGHT THEME  (system preference auto-switch)
+   ────────────────────────────────────────────── */
+@media (prefers-color-scheme: light) {
+  :root:not(.dark) {
+    color-scheme: light;
+
+    --color-ink-950: #f8fafc;
+    --color-ink-900: #f1f5f9;
+    --color-ink-850: #e8eef2;
+    --color-ink-800: #dde5ea;
+    --color-ink-750: #cbd5dc;
+    --color-ink-700: #b0bec5;
+    --color-ink-600: #78909c;
+    --color-ink-400: #546e7a;
+    --color-ink-300: #37474f;
+    --color-ink-200: #263238;
+    --color-ink-100: #102027;
+    --color-ink-50:  #051317;
+
+    --color-surface:         #ffffff;
+    --color-surface-raised:  #f8fafc;
+    --color-surface-overlay: #f1f5f9;
+    --color-border:          #cbd5dc;
+    --color-text-primary:    #102027;
+    --color-text-secondary:  #37474f;
+    --color-text-muted:      #546e7a;
+
+    --color-trafo-blue:        #1565c0;
+    --color-trafo-blue-hover:  #0d47a1;
+    --color-trafo-blue-tint:   rgba(21,101,192,.12);
+    --color-trafo-blue-subtle: rgba(21,101,192,.06);
+
+    --chart-p10: rgba(5,150,105,.25);
+    --chart-p50: #1565c0;
+    --chart-p90: rgba(185,28,28,.4);
+  }
+}
+
+/* Explicit class override for manual toggle */
+.light {
+  color-scheme: light;
+
+  --color-ink-950: #f8fafc;
+  --color-ink-900: #f1f5f9;
+  --color-ink-850: #e8eef2;
+  --color-ink-800: #dde5ea;
+  --color-ink-750: #cbd5dc;
+  --color-ink-700: #b0bec5;
+  --color-ink-600: #78909c;
+  --color-ink-400: #546e7a;
+  --color-ink-300: #37474f;
+  --color-ink-200: #263238;
+  --color-ink-100: #102027;
+  --color-ink-50:  #051317;
+
+  --color-surface:         #ffffff;
+  --color-surface-raised:  #f8fafc;
+  --color-surface-overlay: #f1f5f9;
+  --color-border:          #cbd5dc;
+  --color-text-primary:    #102027;
+  --color-text-secondary:  #37474f;
+  --color-text-muted:      #546e7a;
+
+  --color-trafo-blue:        #1565c0;
+  --color-trafo-blue-hover:  #0d47a1;
+}
+
+/* ──────────────────────────────────────────────
+   3. BASE RESET
+   ────────────────────────────────────────────── */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html {
+  /* Minimum supported width: 360 px */
+  min-width: 360px;
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 body {
-  background-color: var(--color-ink-950);
-  color: var(--color-ink-100);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.5;
@@ -66,35 +203,123 @@ body {
   min-height: 100vh;
 }
 
-/* Accessibility Focus Ring */
+/* ──────────────────────────────────────────────
+   4. ACCESSIBILITY
+   ────────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--color-trafo-blue);
   outline-offset: 2px;
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 8px;
+  padding: 8px 16px;
+  background: var(--color-trafo-blue);
+  color: #fff;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  z-index: var(--z-modal);
+  transition: top var(--transition-fast);
 }
-::-webkit-scrollbar-track {
-  background: var(--color-ink-950);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--color-ink-700);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink-600);
+.skip-link:focus {
+  top: 8px;
 }
 
-/* Tabular figures for telemetry data */
+/* ──────────────────────────────────────────────
+   5. SCROLLBAR
+   ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
+::-webkit-scrollbar-thumb { background: var(--color-ink-700); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-600); }
+
+/* ──────────────────────────────────────────────
+   6. UTILITY CLASSES
+   ────────────────────────────────────────────── */
 .font-mono-numbers {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-/* Component Catalog Styles */
+.severity-ok   { color: var(--color-safe-green); }
+.severity-warn { color: var(--color-warn-amber); }
+.severity-crit { color: var(--color-crit-red); }
+
+.bg-severity-ok   { background: var(--color-safe-green-bg);  border-color: var(--color-safe-green-border); }
+.bg-severity-warn { background: var(--color-warn-amber-bg);  border-color: var(--color-warn-amber-border); }
+.bg-severity-crit { background: var(--color-crit-red-bg);    border-color: var(--color-crit-red-border); }
+
+/* ──────────────────────────────────────────────
+   7. LEAFLET OVERRIDES (OSM tiles)
+   ────────────────────────────────────────────── */
+.leaflet-container {
+  background: var(--color-surface);
+  font-family: var(--font-sans);
+}
+
+/* Dark-mode map filter */
+.dark .leaflet-tile-pane,
+:root:not(.light) .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(0.85) saturate(0.7);
+}
+
+.leaflet-popup-content-wrapper {
+  background: var(--color-surface-raised);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.leaflet-popup-tip {
+  background: var(--color-surface-raised);
+}
+
+/* ──────────────────────────────────────────────
+   8. ECHARTS OVERRIDES
+   ────────────────────────────────────────────── */
+.echarts-wrapper {
+  width: 100%;
+  min-height: 240px;
+}
+
+@media (min-width: 768px) {
+  .echarts-wrapper {
+    min-height: 320px;
+  }
+}
+
+/* ──────────────────────────────────────────────
+   9. RESPONSIVE LAYOUT UTILITIES
+   ────────────────────────────────────────────── */
+.container-app {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+@media (min-width: 640px) {
+  .container-app { padding: 0 var(--space-6); }
+}
+
+@media (min-width: 1024px) {
+  .container-app { padding: 0 var(--space-8); }
+}
+
+/* Mobile navigation */
+@media (min-width: 768px) {
+  .mobile-nav { display: none !important; }
+}
+@media (max-width: 767px) {
+  .desktop-nav { display: none !important; }
+}
+
+/* ──────────────────────────────────────────────
+   10. COMPONENT CATALOG
+   ────────────────────────────────────────────── */
 .component-meta-header {
   display: flex;
   align-items: center;
@@ -102,8 +327,8 @@ body {
   flex-wrap: wrap;
   gap: 12px;
   padding: 12px 16px;
-  background: var(--color-ink-900);
-  border: 1px solid var(--color-ink-750);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 }
 
@@ -113,7 +338,7 @@ body {
   font-weight: 700;
   color: var(--color-trafo-blue);
   background: var(--color-trafo-blue-subtle);
-  border: 1px solid rgba(30, 136, 229, 0.25);
+  border: 1px solid rgba(30,136,229,.25);
   padding: 4px 8px;
   border-radius: var(--radius-sm);
 }
@@ -121,13 +346,13 @@ body {
 .component-title {
   font-size: 18px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
 .component-sub {
   font-size: 13px;
-  color: var(--color-ink-300);
+  color: var(--color-text-secondary);
   margin: 2px 0 0;
 }
 
@@ -135,7 +360,7 @@ body {
   font-family: var(--font-mono);
   font-size: 12px;
   color: #a5f3fc;
-  background: var(--color-ink-800);
+  background: var(--color-surface-overlay);
   padding: 2px 5px;
   border-radius: 4px;
 }
@@ -144,12 +369,12 @@ body {
   font-size: 12px;
   font-family: var(--font-mono);
   color: var(--color-trafo-blue);
-  background: var(--color-ink-850);
-  border: 1px solid var(--color-ink-700);
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border);
   padding: 4px 8px;
   border-radius: 4px;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .toc-tag:hover {
@@ -159,24 +384,10 @@ body {
 }
 
 .app-nav-button {
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .app-nav-button:hover {
   background: var(--color-ink-750) !important;
   color: #ffffff !important;
 }
-
-/* Mobile & Desktop Nav Breakpoints */
-@media (min-width: 768px) {
-  .mobile-nav {
-    display: none !important;
-  }
-}
-
-@media (max-width: 767px) {
-  .desktop-nav {
-    display: none !important;
-  }
-}
-
