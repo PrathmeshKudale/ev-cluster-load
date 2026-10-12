@@ -128,3 +128,121 @@ class TokenResponse(BaseModel):
     expires_in: int = Field(900, examples=[900], description="Access token expiration in seconds")
     user: UserProfileResponse
 
+
+# ==============================================================================
+# Form Schemas — same constraints as the Zod schemas in frontend/src/features/forms/schemas.ts
+# MUST be kept in sync: any range change here must also update the Zod schema and vice-versa.
+# ==============================================================================
+
+CONNECTOR_TYPES = ("Type 2", "CCS", "CHAdeMO", "GB/T")
+PRIORITY_MODES = ("fastest", "balanced", "grid_friendly")
+
+
+class DriverRequestSchema(BaseModel):
+    """
+    Validated driver charging request.
+    Field limits mirror frontend/src/features/forms/schemas.ts :: driverRequestSchema.
+    """
+    battery_pct: float = Field(
+        ...,
+        ge=5,
+        le=95,
+        examples=[20],
+        description="Current battery level in percent (5–95)",
+    )
+    target_pct: float = Field(
+        ...,
+        ge=20,
+        le=100,
+        examples=[80],
+        description="Target battery level in percent (20–100, must exceed battery_pct)",
+    )
+    connector_type: str = Field(
+        ...,
+        examples=["Type 2"],
+        description=f"Connector type: {', '.join(CONNECTOR_TYPES)}",
+    )
+    departure_window_h: float = Field(
+        ...,
+        ge=0.5,
+        le=12,
+        examples=[2.0],
+        description="Hours until departure (0.5–12)",
+    )
+    priority_mode: str = Field(
+        "balanced",
+        examples=["balanced"],
+        description=f"Dispatch strategy: {', '.join(PRIORITY_MODES)}",
+    )
+
+    def model_post_init(self, __context) -> None:
+        if self.target_pct <= self.battery_pct:
+            raise ValueError(
+                f"target_pct ({self.target_pct}) must be greater than battery_pct ({self.battery_pct})"
+            )
+        if self.connector_type not in CONNECTOR_TYPES:
+            raise ValueError(f"connector_type must be one of {CONNECTOR_TYPES}")
+        if self.priority_mode not in PRIORITY_MODES:
+            raise ValueError(f"priority_mode must be one of {PRIORITY_MODES}")
+
+
+class OperatorSettingsSchema(BaseModel):
+    """
+    Validated operator cluster settings.
+    Field limits mirror frontend/src/features/forms/schemas.ts :: operatorSettingsSchema.
+    """
+    transformer_kva: float = Field(
+        ...,
+        ge=10,
+        le=2000,
+        examples=[100],
+        description="Transformer nameplate rating in kVA (10–2000)",
+    )
+    warn_threshold_pct: float = Field(
+        ...,
+        ge=50,
+        le=98,
+        examples=[80],
+        description="Amber warning threshold as percent of transformer rating (50–98)",
+    )
+    crit_threshold_pct: float = Field(
+        ...,
+        ge=51,
+        le=99,
+        examples=[90],
+        description="Red critical threshold as percent of transformer rating (51–99, must exceed warn_threshold_pct)",
+    )
+    weight_queue: float = Field(
+        ...,
+        ge=0,
+        le=1,
+        examples=[0.5],
+        description="Queue pressure weight for recommendation scoring (0–1)",
+    )
+    weight_distance: float = Field(
+        ...,
+        ge=0,
+        le=1,
+        examples=[0.3],
+        description="Distance weight for recommendation scoring (0–1)",
+    )
+    weight_grid: float = Field(
+        ...,
+        ge=0,
+        le=1,
+        examples=[0.2],
+        description="Grid load weight for recommendation scoring (0–1)",
+    )
+
+    def model_post_init(self, __context) -> None:
+        if self.crit_threshold_pct <= self.warn_threshold_pct:
+            raise ValueError(
+                f"crit_threshold_pct ({self.crit_threshold_pct}) must exceed warn_threshold_pct ({self.warn_threshold_pct})"
+            )
+        weight_sum = self.weight_queue + self.weight_distance + self.weight_grid
+        if not (0.99 <= weight_sum <= 1.01):
+            raise ValueError(
+                f"Recommendation weights must sum to 1.0 (got {weight_sum:.3f}). "
+                "Adjust weight_queue, weight_distance, weight_grid."
+            )
+

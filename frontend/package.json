@@ -13,14 +13,17 @@
     "gen:api": "openapi-typescript http://localhost:8000/openapi.json -o src/lib/openapi.d.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.9.1",
     "@tanstack/react-query": "^5.104.2",
     "clsx": "^2.1.1",
     "lucide-react": "^1.55.0",
     "msw": "^3.0.3",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-hook-form": "^7.90.0",
     "react-router-dom": "^7.18.4",
     "tailwind-merge": "^3.7.0",
+    "zod": "^4.6.6",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
