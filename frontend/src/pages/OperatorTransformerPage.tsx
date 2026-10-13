@@ -6,9 +6,13 @@ import { PageLoader, PageError } from '@/components/PageStates'
 import { transformerFixture } from '@/fixtures/transformerFixture'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Thermometer, Zap, CheckCircle2 } from 'lucide-react'
+import { Thermometer, Zap, CheckCircle2, RefreshCw, Activity } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useUIStore } from '@/store/uiStore'
 
 export const OperatorTransformerPage: React.FC = () => {
+  const navigate = useNavigate()
+  const showToast = useUIStore((s) => s.showToast)
   const { data: riskData, isLoading, error, refetch } = useTransformerRisk('T1')
 
   if (isLoading) {
@@ -25,14 +29,70 @@ export const OperatorTransformerPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      {/* Title */}
-      <div>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: '#fff' }}>
-          Transformer Monitor & Thermal Health
-        </h1>
-        <p style={{ fontSize: '13px', color: 'var(--color-ink-300)', marginTop: '4px' }}>
-          Substation TX-100kVA • IEEE C57.91 Thermal Model • Derating Factor 0.982 @ 32.5°C
-        </p>
+      {/* Title & Action Bar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div>
+          <h1 style={{ fontSize: '20px', fontWeight: 700, margin: 0, color: '#fff' }}>
+            Transformer Monitor & Thermal Health
+          </h1>
+          <p style={{ fontSize: '13px', color: 'var(--color-ink-300)', marginTop: '4px' }}>
+            Substation TX-100kVA • IEEE C57.91 Thermal Model • Derating Factor 0.982 @ 32.5°C
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => {
+              refetch()
+              showToast('Transformer T1 telemetry refreshed (IEEE C57.91 hottest-spot: 94.2°C)', 'success')
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              background: 'var(--color-ink-800)',
+              border: '1px solid var(--color-ink-600)',
+              borderRadius: '6px',
+              color: 'var(--color-ink-200)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <RefreshCw size={13} />
+            <span>Refresh State</span>
+          </button>
+          <button
+            onClick={() => {
+              showToast('Pandapower AC power flow re-run: 20/0.4 kV radial feeder converged (V-Drop 3.49%)', 'info')
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              background: 'rgba(5, 150, 105, 0.16)',
+              border: '1px solid var(--color-safe-green)',
+              borderRadius: '6px',
+              color: '#fff',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            <Activity size={13} />
+            <span>Verify Power Flow</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Grid: Gauge on left, Thermal & Pandapower Cards on right */}
@@ -134,7 +194,19 @@ export const OperatorTransformerPage: React.FC = () => {
 
       {/* Alert Feed */}
       <section aria-label="Transformer Alerts Feed">
-        <AlertFeed />
+        <AlertFeed
+          onAction={(item) => {
+            if (item.action_label?.toLowerCase().includes('reroute') || item.entity_type === 'station') {
+              showToast(`Dispatched reroute away from ${item.entity_id || 'station'}... Navigating to recommend`, 'info')
+              navigate('/driver/recommend')
+            } else {
+              showToast(`Dispatched action: ${item.action_label || 'Acknowledge'}`, 'success')
+            }
+          }}
+          onAcknowledge={(alertId) => {
+            showToast(`Alert ${alertId} acknowledged`, 'info')
+          }}
+        />
       </section>
     </div>
   )

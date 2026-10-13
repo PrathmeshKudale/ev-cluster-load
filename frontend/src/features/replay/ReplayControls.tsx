@@ -19,6 +19,9 @@ import { replayFixture, type ReplayStateFixture } from '@/fixtures/replayFixture
 
 export interface ReplayControlsProps {
   initialState?: ReplayStateFixture
+  isPlaying?: boolean
+  speed?: 1 | 10 | 60 | 1440
+  currentStep?: number
   onPlayChange?: (isPlaying: boolean) => void
   onSpeedChange?: (speed: 1 | 10 | 60 | 1440) => void
   onSeek?: (stepHours: number) => void
@@ -26,44 +29,51 @@ export interface ReplayControlsProps {
 
 export const ReplayControls: React.FC<ReplayControlsProps> = ({
   initialState = replayFixture,
+  isPlaying: isPlayingProp,
+  speed: speedProp,
+  currentStep: currentStepProp,
   onPlayChange,
   onSpeedChange,
   onSeek,
 }) => {
-  const [isPlaying, setIsPlaying] = useState(initialState.is_playing)
-  const [speed, setSpeed] = useState<1 | 10 | 60 | 1440>(initialState.speed_multiplier)
-  const [currentStep, setCurrentStep] = useState(initialState.current_step_hours)
+  const [localPlaying, setLocalPlaying] = useState(initialState.is_playing)
+  const [localSpeed, setLocalSpeed] = useState<1 | 10 | 60 | 1440>(initialState.speed_multiplier)
+  const [localStep, setLocalStep] = useState(initialState.current_step_hours)
+
+  const isPlaying = isPlayingProp !== undefined ? isPlayingProp : localPlaying
+  const speed = speedProp !== undefined ? speedProp : localSpeed
+  const currentStep = currentStepProp !== undefined ? currentStepProp : localStep
 
   const togglePlay = () => {
     const next = !isPlaying
-    setIsPlaying(next)
+    setLocalPlaying(next)
     onPlayChange?.(next)
   }
 
   const handleSpeedSelect = (s: 1 | 10 | 60 | 1440) => {
-    setSpeed(s)
+    setLocalSpeed(s)
     onSpeedChange?.(s)
   }
 
   const handleSeekChange = (val: number) => {
-    setCurrentStep(val)
+    setLocalStep(val)
     onSeek?.(val)
   }
 
   const stepForward = () => {
-    const next = Math.min(currentStep + 1, initialState.total_horizon_hours)
-    setCurrentStep(next)
+    const next = Math.min(Math.round(currentStep + 1), initialState.total_horizon_hours)
+    setLocalStep(next)
     onSeek?.(next)
   }
 
   const stepBack = () => {
-    const next = Math.max(currentStep - 1, 0)
-    setCurrentStep(next)
+    const next = Math.max(Math.round(currentStep - 1), 0)
+    setLocalStep(next)
     onSeek?.(next)
   }
 
   const resetTimeline = () => {
-    setCurrentStep(0)
+    setLocalStep(0)
     onSeek?.(0)
   }
 

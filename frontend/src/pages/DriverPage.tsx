@@ -54,6 +54,8 @@ export const DriverPage: React.FC = () => {
       })
     : stationsFixture
 
+  const showToast = useUIStore((s) => s.showToast)
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* Top Banner with Quick Action */}
@@ -114,7 +116,12 @@ export const DriverPage: React.FC = () => {
       <section aria-label="Interactive Cluster Map">
         <ClusterMap
           data={clusterFixture}
-          onSelectStation={(id) => setSelectedStationId(id)}
+          selectedStationId={selectedStationId}
+          onSelectStation={(id) => {
+            setSelectedStationId(id)
+            const st = stationsList.find((s) => s.id === id)
+            if (st) showToast(`Selected ${st.name} (${st.id}) on Cluster Map`, 'info')
+          }}
         />
       </section>
 
@@ -133,15 +140,20 @@ export const DriverPage: React.FC = () => {
           {stationsList.map((station) => (
             <div
               key={station.id}
-              onClick={() => setSelectedStationId(station.id)}
               style={{
-                cursor: 'pointer',
                 borderRadius: '8px',
                 border: selectedStationId === station.id ? '2px solid var(--color-trafo-blue)' : '2px solid transparent',
                 transition: 'border 0.15s ease',
               }}
             >
-              <StationCard station={station} />
+              <StationCard
+                station={station}
+                selected={selectedStationId === station.id}
+                onSelect={(id) => {
+                  setSelectedStationId(id)
+                  showToast(`Selected ${station.name} (${station.id})`, 'info')
+                }}
+              />
             </div>
           ))}
         </div>

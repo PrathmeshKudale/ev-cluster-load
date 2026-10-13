@@ -9,9 +9,12 @@ import { forecastFixture, type ForecastFixture } from '@/fixtures/forecastFixtur
 import { stationsFixture, type StationDetailFixture } from '@/fixtures/stationsFixture'
 import { transformerFixture } from '@/fixtures/transformerFixture'
 import { Cpu, RefreshCw } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useUIStore } from '@/store/uiStore'
 
 export const OperatorPage: React.FC = () => {
+  const navigate = useNavigate()
+  const showToast = useUIStore((s) => s.showToast)
   const { data: forecastData, isLoading: forecastLoading, error: forecastError, refetch: refetchForecast } = useForecast()
   const { data: stationsData, isLoading: stationsLoading, error: stationsError, refetch: refetchStations } = useStations()
   const { data: riskData, isLoading: riskLoading, error: riskError, refetch: refetchRisk } = useTransformerRisk('T1')
@@ -96,6 +99,7 @@ export const OperatorPage: React.FC = () => {
               refetchForecast()
               refetchStations()
               refetchRisk()
+              showToast('Substation telemetry refreshed (Forecast, Stations, Transformer T1)', 'success')
             }}
             style={{
               display: 'inline-flex',
@@ -160,7 +164,22 @@ export const OperatorPage: React.FC = () => {
             warnThreshold={riskData?.warn_threshold_pct ?? 80}
             critThreshold={riskData?.crit_threshold_pct ?? 90}
           />
-          <AlertFeed />
+          <AlertFeed
+            onAction={(item) => {
+              if (item.action_label?.toLowerCase().includes('reroute') || item.entity_type === 'station') {
+                showToast(`Rerouting drivers away from ${item.entity_id || 'station'}... Initiating dispatch`, 'info')
+                navigate('/driver/recommend')
+              } else if (item.action_label?.toLowerCase().includes('headroom') || item.entity_type === 'transformer') {
+                showToast('Reviewing transformer thermal headroom...', 'info')
+                navigate('/operator/transformer')
+              } else {
+                showToast(`Action dispatched: ${item.action_label || 'Resolved'}`, 'success')
+              }
+            }}
+            onAcknowledge={(alertId) => {
+              showToast(`Alert ${alertId} acknowledged`, 'info')
+            }}
+          />
         </div>
       </div>
 

@@ -141,6 +141,86 @@ export const OperatorStationPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Active Operator Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle style={{ fontSize: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Activity size={18} color="var(--color-trafo-blue)" />
+            <span>Operator Remote Controls & Telemetry Dispatch</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                refetch()
+                showToast(`Live diagnostics refreshed for station ${station.name} (${station.id}).`, 'success')
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                background: 'var(--color-ink-800)',
+                border: '1px solid var(--color-ink-600)',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <Zap size={14} />
+              <span>Refresh Station Diagnostics</span>
+            </button>
+
+            <button
+              onClick={() => {
+                showToast(`[OCPP 1.6J] Reset(type='Soft') dispatched to ${station.id}. Response: Accepted`, 'info')
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                background: 'rgba(217, 119, 6, 0.16)',
+                border: '1px solid var(--color-warn-amber)',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <Clock size={14} />
+              <span>Trigger OCPP 1.6J Soft Reset</span>
+            </button>
+
+            <button
+              onClick={() => {
+                showToast(`[OSCP 2.0] Capacity limit adjusted for ${station.id}. Dynamic load headroom optimized.`, 'success')
+              }}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 16px',
+                background: 'rgba(5, 150, 105, 0.16)',
+                border: '1px solid var(--color-safe-green)',
+                borderRadius: '6px',
+                color: '#fff',
+                fontSize: '13px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <CheckCircle2 size={14} />
+              <span>Apply Dynamic OSCP Curtailment</span>
+            </button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

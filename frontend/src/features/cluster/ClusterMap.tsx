@@ -6,17 +6,20 @@ import { clusterFixture, type ClusterFixture } from '@/fixtures/clusterFixture'
 
 export interface ClusterMapProps {
   data?: ClusterFixture
+  selectedStationId?: string
   onSelectStation?: (stationId: string) => void
 }
 
 export const ClusterMap: React.FC<ClusterMapProps> = ({
   data = clusterFixture,
+  selectedStationId: externalSelectedId,
   onSelectStation,
 }) => {
-  const [selectedStationId, setSelectedStationId] = useState<string>('S1')
+  const [localSelectedId, setLocalSelectedId] = useState<string>('S1')
+  const selectedStationId = externalSelectedId ?? localSelectedId
 
   const handleStationClick = (id: string) => {
-    setSelectedStationId(id)
+    setLocalSelectedId(id)
     onSelectStation?.(id)
   }
 

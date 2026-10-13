@@ -51,6 +51,32 @@ export const ReplayPage: React.FC = () => {
   const wsRef = useRef<WebSocket | null>(null)
   const timerRef = useRef<number | null>(null)
 
+  // Connect to live WebSocket accelerated replay engine
+  useEffect(() => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host
+    const wsUrl = `${protocol}//${host}/api/v1/ws/replay`
+
+    let ws: WebSocket | null = null
+    try {
+      ws = new WebSocket(wsUrl)
+      wsRef.current = ws
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.tick !== undefined && typeof data.tick === 'number') {
+            setTick(data.tick)
+          }
+        } catch {}
+      }
+    } catch {}
+
+    return () => {
+      if (ws) ws.close()
+    }
+  }, [])
+
   // Current calculated simulated time
   const hour = Math.floor(tick / 60) % 24
   const minute = tick % 60
@@ -269,6 +295,9 @@ export const ReplayPage: React.FC = () => {
       {/* Live Playback Transport Bar */}
       <section aria-label="Playback Controller">
         <ReplayControls
+          isPlaying={isPlaying}
+          speed={speed}
+          currentStep={Math.round((tick / 60) * 10) / 10}
           onPlayChange={handlePlayChange}
           onSpeedChange={handleSpeedChange}
           onSeek={handleSeek}
