@@ -45,11 +45,16 @@ class SimulationService:
             "jain_fairness_index": 0.94,
         }
 
+        fcfs_data["peak_load_pct"] = round((fcfs_data["peak_load_kw"] / 85.0) * 100.0, 1)
+        smart_data["peak_load_pct"] = round((smart_data["peak_load_kw"] / 85.0) * 100.0, 1)
+
         comparison = FairnessService.benchmark_comparison(fcfs_data, smart_data)
+        comparison["smart"] = comparison["smart_dispatch"]
         comparison["evaluation_type"] = "measured_simulation_benchmark"
         comparison["benchmark_period_days"] = 14
         comparison["strategies"] = {
             "fcfs": comparison["fcfs"],
+            "smart": comparison["smart"],
             "smart_dispatch": comparison["smart_dispatch"],
         }
         comparison["impact_summary"]["forecasting_mae_improvement_pct"] = improvement_pct

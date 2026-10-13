@@ -1,8 +1,8 @@
 import React, { lazy } from 'react'
-import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { createBrowserRouter, Navigate, useRouteError } from 'react-router-dom'
 import { RootLayout } from './components/RootLayout'
 import { RouteGuard } from './components/RouteGuard'
-import { PageLoader } from './components/PageStates'
+import { PageLoader, PageError } from './components/PageStates'
 import { useUIStore } from './store/uiStore'
 
 // Lazy-loaded pages
@@ -24,10 +24,25 @@ const HomeRedirect: React.FC = () => {
   return <Navigate to={persona === 'operator' ? '/operator' : '/driver'} replace />
 }
 
+const RootErrorBoundary: React.FC = () => {
+  const error = useRouteError() as Error
+  return (
+    <div style={{ minHeight: '100vh', background: 'var(--color-ink-950)', display: 'grid', placeItems: 'center', padding: '24px' }}>
+      <PageError
+        error={error}
+        reset={() => {
+          window.location.href = '/'
+        }}
+      />
+    </div>
+  )
+}
+
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
+    errorElement: <RootErrorBoundary />,
     children: [
       {
         index: true,

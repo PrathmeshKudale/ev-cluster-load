@@ -58,23 +58,28 @@ class SimulationRepository(BaseRepository):
                 ((fcfs_metric.mean_wait_min - smart_metric.mean_wait_min) / fcfs_metric.mean_wait_min) * 100.0, 1
             ) if fcfs_metric.mean_wait_min else 42.0
 
+            fcfs_dict = {
+                "name": "First-Come-First-Served (Unmanaged)",
+                "peak_load_kw": fcfs_metric.peak_load_kw,
+                "peak_load_pct": round((fcfs_metric.peak_load_kw / 85.0) * 100.0, 1),
+                "mean_wait_min": fcfs_metric.mean_wait_min,
+                "transformer_overload_warn_hours": fcfs_metric.overload_warn_hours or 3.4,
+                "transformer_overload_crit_hours": fcfs_metric.overload_crit_hours or 1.2,
+                "jain_fairness_index": fcfs_metric.jain_fairness_index or 0.81,
+            }
+            smart_dict = {
+                "name": "Transformer-Aware Smart Dispatch",
+                "peak_load_kw": smart_metric.peak_load_kw,
+                "peak_load_pct": round((smart_metric.peak_load_kw / 85.0) * 100.0, 1),
+                "mean_wait_min": smart_metric.mean_wait_min,
+                "transformer_overload_warn_hours": smart_metric.overload_warn_hours or 0.4,
+                "transformer_overload_crit_hours": smart_metric.overload_crit_hours or 0.0,
+                "jain_fairness_index": smart_metric.jain_fairness_index or 0.94,
+            }
             return {
-                "fcfs": {
-                    "name": "First-Come-First-Served (Unmanaged)",
-                    "peak_load_kw": fcfs_metric.peak_load_kw,
-                    "mean_wait_min": fcfs_metric.mean_wait_min,
-                    "transformer_overload_warn_hours": fcfs_metric.overload_warn_hours or 3.4,
-                    "transformer_overload_crit_hours": fcfs_metric.overload_crit_hours or 1.2,
-                    "jain_fairness_index": fcfs_metric.jain_fairness_index or 0.81,
-                },
-                "smart_dispatch": {
-                    "name": "Transformer-Aware Smart Dispatch",
-                    "peak_load_kw": smart_metric.peak_load_kw,
-                    "mean_wait_min": smart_metric.mean_wait_min,
-                    "transformer_overload_warn_hours": smart_metric.overload_warn_hours or 0.4,
-                    "transformer_overload_crit_hours": smart_metric.overload_crit_hours or 0.0,
-                    "jain_fairness_index": smart_metric.jain_fairness_index or 0.94,
-                },
+                "fcfs": fcfs_dict,
+                "smart": smart_dict,
+                "smart_dispatch": smart_dict,
                 "impact_summary": {
                     "peak_shaved_pct": peak_shaved_pct,
                     "wait_time_reduction_pct": wait_red_pct,
@@ -82,8 +87,9 @@ class SimulationRepository(BaseRepository):
                 },
                 "evaluation_type": "measured_simulation_benchmark",
                 "strategies": {
-                    "fcfs": {"peak_load_kw": fcfs_metric.peak_load_kw, "mean_wait_min": fcfs_metric.mean_wait_min},
-                    "smart_dispatch": {"peak_load_kw": smart_metric.peak_load_kw, "mean_wait_min": smart_metric.mean_wait_min},
+                    "fcfs": fcfs_dict,
+                    "smart": smart_dict,
+                    "smart_dispatch": smart_dict,
                 },
             }
         except Exception as exc:

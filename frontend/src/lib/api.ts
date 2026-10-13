@@ -156,15 +156,28 @@ export interface TokenResponse {
 }
 
 export interface SimulationMetrics {
-  algorithm: string
-  peak_load_pct: number
-  mean_wait_min: number
-  overload_events: number
+  name?: string
+  algorithm?: string
+  peak_load_kw?: number
+  peak_load_pct?: number
+  mean_wait_min?: number
+  transformer_overload_warn_hours?: number
+  transformer_overload_crit_hours?: number
+  jain_fairness_index?: number
 }
 
 export interface MetricsSimulation {
-  fcfs: SimulationMetrics
-  smart: SimulationMetrics
+  fcfs?: SimulationMetrics
+  smart?: SimulationMetrics
+  smart_dispatch?: SimulationMetrics
+  impact_summary?: {
+    peak_shaved_kw?: number
+    peak_shaved_pct?: number
+    wait_time_reduction_pct?: number
+    critical_overload_reduction_pct?: number
+    jain_fairness_improvement?: number
+    forecasting_mae_improvement_pct?: number
+  }
 }
 
 export interface ReplayStartRequest {
