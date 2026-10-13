@@ -1,9 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useRecommendations } from '@/lib/queries'
 import { useUIStore, type DriverMode } from '@/store/uiStore'
 import { RecommendationCard } from '@/features/recommend/RecommendationCard'
 import { PageLoader, PageError } from '@/components/PageStates'
-import { recommendationFixture } from '@/fixtures/recommendationFixture'
+import { recommendationFixture, type CandidateRecommendation } from '@/fixtures/recommendationFixture'
 import { Zap, Clock, ShieldCheck, Scale } from 'lucide-react'
 
 export const DriverRecommendPage: React.FC = () => {

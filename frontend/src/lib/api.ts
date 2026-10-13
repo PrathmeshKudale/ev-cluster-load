@@ -129,6 +129,7 @@ export interface CandidateSlot {
   detour_min: number
   grid_load_pct: number
   score: number
+  shap_reasons?: string[]
 }
 
 export interface RecommendResponse {

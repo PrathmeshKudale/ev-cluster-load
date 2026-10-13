@@ -1,6 +1,7 @@
 import React from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useStation } from '@/lib/queries'
+import { useUIStore } from '@/store/uiStore'
 import { PageLoader, PageError } from '@/components/PageStates'
 import { stationsFixture } from '@/fixtures/stationsFixture'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -9,6 +10,7 @@ import { ArrowLeft, Zap, Clock, Navigation, Activity, CheckCircle2 } from 'lucid
 
 export const OperatorStationPage: React.FC = () => {
   const { id = 'S1' } = useParams<{ id: string }>()
+  const showToast = useUIStore((s) => s.showToast)
   const { data, isLoading, error, refetch } = useStation(id)
 
   if (isLoading) {
