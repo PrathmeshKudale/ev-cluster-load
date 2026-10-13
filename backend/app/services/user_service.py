@@ -95,13 +95,13 @@ def _build_demo_users() -> Dict[str, UserDTO]:
             hashed_password=hash_password(DEMO_ADMIN_PASSWORD),
             is_active=True,
         ),
-        # Frontend UI Quick-Fill Aliases
+        # Frontend UI Quick-Fill Aliases (Distinct emails to satisfy unique index ix_clean_users_email)
         "operator": UserDTO(
             user_hash=_uhash("operator"),
             username="operator",
             role="operator",
             cluster_id="C1",
-            email="operator@demo.ev",
+            email="operator_alias@demo.ev",
             hashed_password=hash_password("operator123"),
             is_active=True,
         ),
@@ -110,7 +110,7 @@ def _build_demo_users() -> Dict[str, UserDTO]:
             username="driver",
             role="driver",
             cluster_id=None,
-            email="driver@demo.ev",
+            email="driver_alias@demo.ev",
             hashed_password=hash_password("driver123"),
             is_active=True,
         ),
@@ -119,7 +119,7 @@ def _build_demo_users() -> Dict[str, UserDTO]:
             username="judge",
             role="judge",
             cluster_id=None,
-            email="judge@demo.ev",
+            email="judge_alias@demo.ev",
             hashed_password=hash_password("judge123"),
             is_active=True,
         ),
@@ -128,7 +128,7 @@ def _build_demo_users() -> Dict[str, UserDTO]:
             username="admin",
             role="admin",
             cluster_id=None,
-            email="admin@demo.ev",
+            email="admin_alias@demo.ev",
             hashed_password=hash_password("admin123"),
             is_active=True,
         ),
@@ -210,7 +210,9 @@ class UserService:
                 cluster_exists = db.query(Cluster).filter(Cluster.id == cid).first()
                 if not cluster_exists:
                     cid = None
-            existing = db.query(User).filter((User.username == dto.username) | (User.user_hash == dto.user_hash)).first()
+            existing = db.query(User).filter(
+                (User.username == dto.username) | (User.user_hash == dto.user_hash) | (User.email == dto.email)
+            ).first()
             if not existing:
                 u = User(
                     user_hash=dto.user_hash,
