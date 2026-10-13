@@ -105,5 +105,8 @@ export const router = createBrowserRouter([
     ],
   },
 ], {
-  basename: import.meta.env.BASE_URL,
+  basename: (() => {
+    const b = import.meta.env.BASE_URL ?? '/'
+    return b.startsWith('/') && b !== '/' ? b.replace(/\/$/, '') : undefined
+  })(),
 })
