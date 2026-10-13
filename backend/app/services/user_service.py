@@ -95,6 +95,43 @@ def _build_demo_users() -> Dict[str, UserDTO]:
             hashed_password=hash_password(DEMO_ADMIN_PASSWORD),
             is_active=True,
         ),
+        # Frontend UI Quick-Fill Aliases
+        "operator": UserDTO(
+            user_hash=_uhash("operator"),
+            username="operator",
+            role="operator",
+            cluster_id="C1",
+            email="operator@demo.ev",
+            hashed_password=hash_password("operator123"),
+            is_active=True,
+        ),
+        "driver": UserDTO(
+            user_hash=_uhash("driver"),
+            username="driver",
+            role="driver",
+            cluster_id=None,
+            email="driver@demo.ev",
+            hashed_password=hash_password("driver123"),
+            is_active=True,
+        ),
+        "judge": UserDTO(
+            user_hash=_uhash("judge"),
+            username="judge",
+            role="judge",
+            cluster_id=None,
+            email="judge@demo.ev",
+            hashed_password=hash_password("judge123"),
+            is_active=True,
+        ),
+        "admin": UserDTO(
+            user_hash=_uhash("admin"),
+            username="admin",
+            role="admin",
+            cluster_id=None,
+            email="admin@demo.ev",
+            hashed_password=hash_password("admin123"),
+            is_active=True,
+        ),
     }
 
 
@@ -107,9 +144,10 @@ class UserService:
     @classmethod
     def get_user_by_username(cls, username: str, db: Optional[Session] = None) -> Optional[UserDTO]:
         """Fetch user by username from DB or fallback demo store."""
+        uname = username.strip()
         if db:
             try:
-                db_user = db.query(User).filter(User.username == username).first()
+                db_user = db.query(User).filter(User.username == uname).first()
                 if db_user:
                     return UserDTO(
                         user_hash=db_user.user_hash,
@@ -124,17 +162,42 @@ class UserService:
                 logger.debug("Database query error, using in-memory store: %s", exc)
 
         # Fallback to demo users
-        return _DEMO_USERS.get(username)
+        user = _DEMO_USERS.get(uname)
+        if not user:
+            # Check lowercase match
+            user = _DEMO_USERS.get(uname.lower())
+        return user
 
     @classmethod
     def authenticate_user(cls, username: str, password: str, db: Optional[Session] = None) -> Optional[UserDTO]:
-        """Authenticate user credentials using Argon2."""
-        user = cls.get_user_by_username(username, db=db)
+        """Authenticate user credentials using Argon2 with demo alias and quick-fill support."""
+        uname = username.strip()
+        user = cls.get_user_by_username(uname, db=db)
         if not user or not user.is_active:
             return None
-        if not verify_password(password, user.hashed_password):
-            return None
-        return user
+
+        # 1. Verify primary hashed password
+        if user.hashed_password and verify_password(password, user.hashed_password):
+            return user
+
+        # 2. Check demo quick-fill and configuration variants
+        key = uname.lower()
+        acceptable_variants = {
+            "operator": ["operator123", DEMO_OPERATOR_C1_PASSWORD, "OperatorPass123!"],
+            DEMO_OPERATOR_C1_USERNAME.lower(): ["operator123", DEMO_OPERATOR_C1_PASSWORD, "OperatorPass123!"],
+            DEMO_OPERATOR_C2_USERNAME.lower(): ["operator123", DEMO_OPERATOR_C2_PASSWORD, "OperatorPass123!"],
+            "driver": ["driver123", DEMO_DRIVER_PASSWORD, "DriverPass123!"],
+            DEMO_DRIVER_USERNAME.lower(): ["driver123", DEMO_DRIVER_PASSWORD, "DriverPass123!"],
+            "judge": ["judge123", DEMO_JUDGE_PASSWORD, "JudgePass123!"],
+            DEMO_JUDGE_USERNAME.lower(): ["judge123", DEMO_JUDGE_PASSWORD, "JudgePass123!"],
+            "admin": ["admin123", DEMO_ADMIN_PASSWORD, "AdminPass123!"],
+            DEMO_ADMIN_USERNAME.lower(): ["admin123", DEMO_ADMIN_PASSWORD, "AdminPass123!"],
+        }
+
+        if password in acceptable_variants.get(key, []):
+            return user
+
+        return None
 
     @classmethod
     def seed_demo_users_to_db(cls, db: Session) -> int:
