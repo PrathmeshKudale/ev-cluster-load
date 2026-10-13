@@ -20,3 +20,6 @@ pandapower>=2.14
 asyncpg>=0.29
 greenlet>=3.0
 torch>=2.0
+shap>=0.45
+ocpp>=2.0
+websockets>=12.0

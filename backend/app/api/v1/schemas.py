@@ -257,3 +257,34 @@ class OperatorSettingsSchema(BaseModel):
                 "Adjust weight_queue, weight_distance, weight_grid."
             )
 
+
+# ==============================================================================
+# Standards Schemas (OCPP 1.6 & OSCP 2.0)
+# ==============================================================================
+
+class OscpCapacityForecastRequest(BaseModel):
+    max_capacity_kva: float = Field(..., gt=0, examples=[75.0], description="Maximum transformer capacity limit in kVA")
+    forecast_hours: Optional[List[float]] = Field(None, description="Optional 24-hour capacity forecast array in kVA")
+    reason: Optional[str] = Field("DSO grid congestion management", examples=["Feeder overload prevention"], description="Reason for capacity adjustment")
+
+
+class OscpCapacityForecastResponse(BaseModel):
+    status: str = Field("Accepted", examples=["Accepted"])
+    applied_capacity_kva: float = Field(..., examples=[75.0])
+    current_load_kva: float = Field(..., examples=[42.5])
+    alert_triggered: bool = Field(False, examples=[False])
+    forecast_hours: List[float] = Field(...)
+    reason: str = Field(...)
+    timestamp: str = Field(...)
+
+
+class SessionSummarySchema(BaseModel):
+    session_id: str = Field(..., examples=["ocpp-tx-1001"])
+    charger_id: str = Field(..., examples=["CP-101"])
+    status: str = Field(..., examples=["Completed"])
+    power_kw: float = Field(..., examples=[0.0])
+    energy_kwh: float = Field(..., examples=[14.8])
+    start_time: Optional[str] = Field(None)
+    stop_time: Optional[str] = Field(None)
+    reason: Optional[str] = Field(None)
+

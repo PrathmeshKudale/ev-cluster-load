@@ -28,6 +28,7 @@ from app.services import (
 )
 from app.api.v1 import api_v1_router
 from app.api.v1.routers.websockets import router as ws_router
+from app.api.v1.routers.standards import router as standards_router
 
 # Backward compatibility exports for existing modules & tests
 CLUSTER_PCT, STATION_UTIL, MODEL_VERSION = ForecastService.get_cluster_and_station_forecasts()
@@ -43,6 +44,7 @@ TAGS_METADATA = [
     {"name": "Simulation", "description": "Measured discrete-event simulation benchmarks (FCFS vs Smart Dispatch)"},
     {"name": "Replay", "description": "Accelerated 60x historical and simulated replay control"},
     {"name": "Live Telemetry", "description": "Real-time WebSocket streaming of cluster metrics"},
+    {"name": "Standards", "description": "OCPP 1.6J charge point connections and OSCP 2.0 grid capacity forecasts"},
 ]
 
 app = FastAPI(
@@ -62,6 +64,9 @@ app.include_router(api_v1_router)
 
 # Mount root WebSocket route /ws/live alongside /api/v1/ws/live
 app.include_router(ws_router)
+
+# Mount root standards routes (/ocpp/{charger_id}, /oscp/capacity-forecast, /sessions)
+app.include_router(standards_router)
 
 
 # ==============================================================================

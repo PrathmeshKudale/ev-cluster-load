@@ -158,19 +158,27 @@ class ReplayService:
         p10 = float(max(15.0, p50 - 8.0))
         p90 = float(min(110.0, p50 + (14.0 if (8 <= hour <= 10 or 17 <= hour <= 20) else 9.0)))
 
+        # Factor in OSCP DSO dynamic capacity limit
+        from app.services.ocpp_service import OcppService
+        dso_limit = OcppService.get_dso_capacity_limit(100.0)
+        dso_scale = 100.0 / dso_limit if dso_limit > 0 else 1.0
+        p50 = float(round(p50 * dso_scale, 1))
+        p10 = float(round(p10 * dso_scale, 1))
+        p90 = float(round(p90 * dso_scale, 1))
+
         # Determine threshold status
         warn_val = WARN_THRESHOLD * 100.0  # 80%
         crit_val = CRIT_THRESHOLD * 100.0  # 90%
-        if p90 >= crit_val:
+        if p90 >= crit_val or dso_scale > 1.25:
             tx_status = "critical"
-        elif p90 >= warn_val:
+        elif p90 >= warn_val or dso_scale > 1.1:
             tx_status = "warning"
         else:
             tx_status = "normal"
 
         # Station state dynamics
         station_frames = []
-        alerts = []
+        alerts = list(OcppService.get_active_alerts())
         for s in STATIONS_CONFIG:
             sid = s["id"]
             chargers = s.get("chargers", 4)

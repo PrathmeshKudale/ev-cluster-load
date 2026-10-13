@@ -107,17 +107,21 @@ class TransformerService:
         nominal_kva: float = TRANSFORMER_KVA,
         ambient_temp_c: Optional[float] = None,
     ) -> Dict[str, Any]:
-        """Compute transformer peak P90 load, warning hour, and risk level with optional derating."""
+        """Compute transformer peak P90 load, warning hour, and risk level with optional derating and OSCP limits."""
+        from app.services.ocpp_service import OcppService
+
+        active_nominal_kva = OcppService.get_dso_capacity_limit(nominal_kva)
         forecast_data = ForecastService.format_24h_forecast(start_hour=start_hour)
         p90_series = forecast_data["p90"]
         hours = forecast_data["hours"]
 
         # If ambient temperature is supplied, adjust thresholds to reflect derated capacity
         derating_factor = cls.get_derating_factor(ambient_temp_c) if ambient_temp_c is not None else 1.0
-        effective_kva = nominal_kva * derating_factor
+        effective_kva = active_nominal_kva * derating_factor
 
-        # Load percentages scale inversely with derated capacity
-        effective_p90 = [p / derating_factor for p in p90_series]
+        # Load percentages scale inversely with DSO capacity limit and derating
+        dso_scale = nominal_kva / active_nominal_kva if active_nominal_kva > 0 else 1.0
+        effective_p90 = [(p * dso_scale) / derating_factor for p in p90_series]
 
         peak_p90 = max(effective_p90)
         peak_idx = effective_p90.index(peak_p90)

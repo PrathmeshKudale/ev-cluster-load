@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/z2-standards
+- **OCPP 1.6J Central System & WebSocket Server**:
+  - Implemented OCPP 1.6 JSON-over-WebSocket protocol handler under `/ocpp/{charger_id}` and `/api/v1/ocpp/{charger_id}` with `subprotocols=["ocpp1.6"]`.
+  - Full Core Profile support for `BootNotification`, `StatusNotification`, `StartTransaction`, `MeterValues`, and `StopTransaction`.
+  - Transaction lifecycle tracking, energy delivery calculation (`kWh`), and live power load metrics stored in `OcppService` with safe database persistence.
+  - Endpoints `GET /sessions` and `GET /api/v1/sessions` for operator dashboard and session audits.
+  - Endpoints `GET /standards/chargers` and `GET /standards/alerts` for real-time charge point monitoring.
+- **Python `ocpp` Mock Charger Client (`MockChargerClient`)**:
+  - Implemented `MockChargerClient` in `backend/app/services/mock_charger.py` subclassing `ocpp.v16.ChargePoint`.
+  - Created standalone CLI runner `scripts/mock_charger.py` to simulate realistic full charging sessions against running Central Systems.
+- **OSCP 2.0 Dynamic DSO Capacity Limits & Overload Alerting**:
+  - Implemented `PUT /oscp/capacity-forecast` (and `/api/v1/oscp/capacity-forecast`) allowing Distribution System Operators (DSOs) to push time-varying capacity limits.
+  - Sub-tick grid protection: Compares DSO limit against active cluster load ($\text{kW} / 0.95$). If limit drops below active load, an overload alert (`ALT-OSCP-*`) fires within one tick.
+  - Integrated into `TransformerService.get_transformer_risk()` and `ReplayService.get_full_frame_at_tick()` to transition risk level to `critical` dynamically.
+- **Open Standards Documentation & Test Suite**:
+  - Created comprehensive documentation in `docs/standards.md` detailing message schemas, parameters, and verification.
+  - Created automated test suite in `backend/tests/test_standards.py` covering the 5-message OCPP lifecycle, WebSocket framing, OSCP forecast limit changes, and instantaneous overload alerting.
+
 ### Added - feat/z1-replay-shap
 - **WebSocket Replay Engine (1x up to 1440x)**:
   - Implemented accelerated day simulation replay streaming on `/ws/replay` and `/api/v1/ws/replay` in `backend/app/api/v1/routers/websockets.py`.

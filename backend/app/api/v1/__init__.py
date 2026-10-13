@@ -9,6 +9,7 @@ from app.api.v1.routers.recommendations import router as recommendations_router
 from app.api.v1.routers.replay import router as replay_router
 from app.api.v1.routers.websockets import router as ws_router
 from app.api.v1.routers.auth import router as auth_router
+from app.api.v1.routers.standards import router as standards_router
 
 api_v1_router = APIRouter(prefix="/api/v1")
 
@@ -21,5 +22,6 @@ api_v1_router.include_router(metrics_router)
 api_v1_router.include_router(recommendations_router)
 api_v1_router.include_router(replay_router)
 api_v1_router.include_router(ws_router)
+api_v1_router.include_router(standards_router)
 
 __all__ = ["api_v1_router"]
