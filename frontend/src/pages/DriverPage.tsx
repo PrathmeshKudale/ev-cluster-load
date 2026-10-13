@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 export const DriverPage: React.FC = () => {
   const selectedStationId = useUIStore((s) => s.selectedStationId)
   const setSelectedStationId = useUIStore((s) => s.setSelectedStationId)
+  const showToast = useUIStore((s) => s.showToast)
 
   const { data: _clustersData, isLoading: clusterLoading, error: clusterError, refetch: refetchClusters } = useClusters()
   const { data: stationsData, isLoading: stationsLoading, error: stationsError, refetch: refetchStations } = useStations()
@@ -53,8 +54,6 @@ export const DriverPage: React.FC = () => {
         }
       })
     : stationsFixture
-
-  const showToast = useUIStore((s) => s.showToast)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
