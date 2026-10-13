@@ -45,8 +45,10 @@ export const RootLayout: React.FC = () => {
     setPersona(newPersona)
     if (newPersona === 'driver' && location.pathname.startsWith('/operator')) {
       navigate('/driver')
-    } else if (newPersona === 'operator' && location.pathname.startsWith('/driver')) {
-      navigate('/operator')
+    } else if (newPersona === 'operator') {
+      if (location.pathname.startsWith('/driver') || location.pathname === '/unauthorized') {
+        navigate('/operator')
+      }
     }
   }
 
@@ -222,6 +224,9 @@ export const RootLayout: React.FC = () => {
           >
             <NavLink
               to="/driver/recommend"
+              onClick={() => {
+                if (persona !== 'driver') setPersona('driver')
+              }}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
@@ -244,6 +249,9 @@ export const RootLayout: React.FC = () => {
             <NavLink
               to="/driver"
               end
+              onClick={() => {
+                if (persona !== 'driver') setPersona('driver')
+              }}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
@@ -266,6 +274,9 @@ export const RootLayout: React.FC = () => {
             <NavLink
               to="/operator"
               end
+              onClick={() => {
+                if (persona !== 'operator') setPersona('operator')
+              }}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
@@ -287,6 +298,9 @@ export const RootLayout: React.FC = () => {
 
             <NavLink
               to="/operator/transformer"
+              onClick={() => {
+                if (persona !== 'operator') setPersona('operator')
+              }}
               style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',

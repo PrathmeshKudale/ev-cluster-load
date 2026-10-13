@@ -1,9 +1,10 @@
 import React from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { ShieldAlert, ArrowLeft, LogIn } from 'lucide-react'
 import { useUIStore } from '@/store/uiStore'
 
 export const UnauthorizedPage: React.FC = () => {
+  const navigate = useNavigate()
   const persona = useUIStore((s) => s.persona)
   const setPersona = useUIStore((s) => s.setPersona)
 
@@ -45,7 +46,10 @@ export const UnauthorizedPage: React.FC = () => {
 
       <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
         <button
-          onClick={() => setPersona('operator')}
+          onClick={() => {
+            setPersona('operator')
+            navigate('/operator')
+          }}
           style={{
             padding: '8px 16px',
             borderRadius: '6px',
