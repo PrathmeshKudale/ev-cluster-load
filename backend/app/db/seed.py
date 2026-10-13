@@ -110,9 +110,19 @@ def seed_cluster(db: Session) -> Dict[str, int]:
     """Execute deterministic cluster seeding inside an active session."""
     rng = np.random.default_rng(seed=42)
 
-    # 1. Clean existing records for cluster C1 and transformer T1
-    db.execute(text("DELETE FROM clean.clusters WHERE id = :cid"), {"cid": CLUSTER_ID})
+    # 1. Clean existing records for cluster C1 and transformer T1 in reverse dependency order
+    db.execute(text("DELETE FROM clean.forecasts"))
+    db.execute(text("DELETE FROM clean.sessions"))
+    db.execute(text("DELETE FROM clean.station_load"))
+    db.execute(text("DELETE FROM clean.weather"))
+    db.execute(text("DELETE FROM features.station_edges"))
+    db.execute(text("DELETE FROM clean.chargers"))
+    db.execute(text("DELETE FROM clean.stations"))
+    db.execute(text("DELETE FROM clean.config_transformer"))
+    db.execute(text("DELETE FROM clean.config_derating_curve"))
     db.execute(text("DELETE FROM clean.config_tod_tariff"))
+    db.execute(text("DELETE FROM clean.transformers WHERE id = :tid"), {"tid": TRANSFORMER_ID})
+    db.execute(text("DELETE FROM clean.clusters WHERE id = :cid"), {"cid": CLUSTER_ID})
     db.flush()
 
     # 2. Insert Cluster
@@ -277,10 +287,9 @@ def seed_cluster(db: Session) -> Dict[str, int]:
         for h in range(24):
             tgt_ts = now_issued + timedelta(hours=h)
             hod = tgt_ts.hour
-            st_profile = float(station_util[sid][hod])
-            p50_val = round(st_profile * c_kw, 2)
-            p10_val = round(p50_val * 0.70, 2)
-            p90_val = round(p50_val * 1.35, 2)
+            p10_val = round(float(station_util[sid][0][hod]) * c_kw, 2)
+            p50_val = round(float(station_util[sid][1][hod]) * c_kw, 2)
+            p90_val = round(float(station_util[sid][2][hod]) * c_kw, 2)
             db.add(Forecast(
                 station_id=sid,
                 issued_at=now_issued,

@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-10-13
+
+### Added - feat/z4-release
+- **Final Quality Assurance & Release Validation**:
+  - Validated full automated test suite across backend (117 tests passing) and frontend (46 tests passing, zero failures).
+  - Executed complete database restore drill (`scripts/restore_drill.py`) verifying migration schema setup and 100% identical row counts across idempotent seed executions.
+  - Executed end-to-end machine learning and simulation lifecycle (`make ingest` -> `make train` -> `make simulate` -> `make results`).
+  - Built optimized client bundle and validated offline demo mode (`make demo`) operating with zero database or external network requirements.
+  - Tagged production release `v1.0.0`.
 
 ### Added - feat/z3-docs
 - **README Rewrite with Mermaid Architecture & Evidence Links**:

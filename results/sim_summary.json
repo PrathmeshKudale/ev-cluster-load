@@ -1,7 +1,7 @@
 {
   "title": "EV Cluster Load Discrete-Event Simulation Study",
   "measurement_note": "All metrics are labelled [DES] to indicate they are measured in discrete-event simulation using SimPy. They reflect simulation behaviour under empirically bootstrapped arrival distributions and should not be extrapolated to real-world deployments without validation on live data.",
-  "generated_at": "2026-10-12T14:58:56.304434Z",
+  "generated_at": "2026-10-13T05:17:56.297864Z",
   "policies": {
     "fcfs": {
       "policy": "fcfs",

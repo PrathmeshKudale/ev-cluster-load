@@ -1,0 +1,9 @@
+model,architecture,use_graph,use_weather,mae,rmse,pinball_p10,pinball_p50,pinball_p90,coverage_p10_p90,winkler_score,params_count,training_time_s,beats_lightgbm
+LightGBM_Conformal,Gradient Boosted Trees (Quantile + Conformal),False,True,2.36,4.184,0.493,1.18,0.656,82.9,11.491,0,1.25,False
+CNN-LSTM-Attention_weather,Conv1D + LSTM + Temporal Attention,False,True,0.001,0.001,0.0,0.0,0.0,100.0,0.004,27528,2.56,True
+CNN-LSTM-Attention_no_weather,Conv1D + LSTM + Temporal Attention,False,False,0.001,0.001,0.0,0.0,0.0,100.0,0.002,27336,2.42,True
+PatchTST_weather,Patch Time Series Transformer,False,True,0.001,0.002,0.0,0.001,0.001,100.0,0.008,71304,3.46,True
+PatchTST_no_weather,Patch Time Series Transformer,False,False,0.001,0.001,0.0,0.0,0.001,99.2,0.006,71048,3.58,True
+ST-GNN_graph_weather,GCN over station_edges + Temporal GRU,True,True,0.006,0.009,0.001,0.003,0.003,89.7,0.036,11368,6.64,True
+ST-GNN_graph_no_weather,GCN over station_edges + Temporal GRU,True,False,0.004,0.006,0.0,0.002,0.002,100.0,0.024,11304,6.65,True
+ST-GNN_no_graph_ablation,GCN over station_edges + Temporal GRU,False,True,0.004,0.008,0.0,0.002,0.002,95.0,0.026,11368,6.94,True
