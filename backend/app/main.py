@@ -111,7 +111,17 @@ def legacy_recommend():
     return RedirectResponse(url="/api/v1/recommend", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
-# Mount static frontend dashboard
+class SPAStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as ex:
+            if ex.status_code == 404 and self.html:
+                return await super().get_response("index.html", scope)
+            raise
+
+
+# Mount static frontend dashboard with SPA client-side routing fallback
 dist_dir = Path(__file__).resolve().parents[2] / "frontend" / "dist"
 ui_dir = dist_dir if dist_dir.exists() else (Path(__file__).resolve().parents[2] / "frontend")
-app.mount("/", StaticFiles(directory=ui_dir, html=True), name="ui")
+app.mount("/", SPAStaticFiles(directory=ui_dir, html=True), name="ui")
