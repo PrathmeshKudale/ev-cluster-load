@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { Zap, Activity, ShieldCheck } from 'lucide-react'
+import { Zap, Activity, ShieldCheck, MapPin, Globe, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { clusterFixture, type ClusterFixture } from '@/fixtures/clusterFixture'
+import { StationMap, type StationMapMarker } from './StationMap'
 
 export interface ClusterMapProps {
   data?: ClusterFixture
@@ -16,6 +17,7 @@ export const ClusterMap: React.FC<ClusterMapProps> = ({
   onSelectStation,
 }) => {
   const [localSelectedId, setLocalSelectedId] = useState<string>('S1')
+  const [viewMode, setViewMode] = useState<'map' | 'topology'>('map')
   const selectedStationId = externalSelectedId ?? localSelectedId
 
   const handleStationClick = (id: string) => {
@@ -24,6 +26,16 @@ export const ClusterMap: React.FC<ClusterMapProps> = ({
   }
 
   const selectedStation = data.stations.find((s) => s.id === selectedStationId) || data.stations[0]
+
+  const mapMarkers: StationMapMarker[] = data.stations.map((s) => ({
+    id: s.id,
+    name: s.name,
+    latitude: s.latitude,
+    longitude: s.longitude,
+    utilization: s.utilization_rate,
+    chargers: s.chargers,
+    queueDepth: s.status === 'busy' ? 2 : s.status === 'full' ? 5 : 0,
+  }))
 
   // Relative SVG positions for 4 stations and transformer in a 640x360 coordinate system
   const nodePositions: Record<string, { x: number; y: number }> = {
@@ -46,13 +58,53 @@ export const ClusterMap: React.FC<ClusterMapProps> = ({
         <div>
           <CardTitle style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Zap size={20} color="var(--color-trafo-blue)" />
-            <span>Cluster Map & ST-GNN Topology</span>
+            <span>Cluster Map & Station Locations</span>
           </CardTitle>
           <p style={{ fontSize: '13px', color: 'var(--color-ink-300)', marginTop: '2px' }}>
-            {data.name} • Feeder TX-100kVA • 4 Radial Charging Hubs
+            {data.name} • Feeder TX-100kVA • 4 Radial Charging Hubs (Bengaluru)
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'inline-flex', background: 'var(--color-ink-900)', padding: '3px', borderRadius: '6px', border: '1px solid var(--color-ink-700)' }}>
+            <button
+              onClick={() => setViewMode('map')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                background: viewMode === 'map' ? 'var(--color-trafo-blue)' : 'transparent',
+                color: viewMode === 'map' ? '#fff' : 'var(--color-ink-300)',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <Globe size={13} />
+              <span>Real GPS Map</span>
+            </button>
+            <button
+              onClick={() => setViewMode('topology')}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                background: viewMode === 'topology' ? 'var(--color-trafo-blue)' : 'transparent',
+                color: viewMode === 'topology' ? '#fff' : 'var(--color-ink-300)',
+                border: 'none',
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              <Activity size={13} />
+              <span>Grid Schematic</span>
+            </button>
+          </div>
           <Badge variant="brand" icon={<Activity size={12} />}>
             OSRM + Haversine
           </Badge>
@@ -63,17 +115,66 @@ export const ClusterMap: React.FC<ClusterMapProps> = ({
       </CardHeader>
 
       <CardContent style={{ padding: 0 }}>
-        {/* Interactive SVG Diagram */}
-        <div
-          style={{
-            position: 'relative',
-            width: '100%',
-            backgroundColor: 'var(--color-ink-950)',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--color-ink-700)',
-            overflow: 'hidden',
-          }}
-        >
+        {viewMode === 'map' ? (
+          <div>
+            <StationMap
+              markers={mapMarkers}
+              selectedStationId={selectedStationId}
+              onMarkerClick={handleStationClick}
+              height={400}
+            />
+            {/* Real GPS Coordinates telemetry bar */}
+            <div
+              style={{
+                padding: '12px 16px',
+                backgroundColor: 'var(--color-ink-900)',
+                borderTop: '1px solid var(--color-ink-700)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '10px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <MapPin size={16} color="var(--color-trafo-blue)" />
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>
+                  {selectedStation.name} ({selectedStation.id})
+                </span>
+                <span style={{ fontSize: '12px', color: 'var(--color-ink-300)' }}>
+                  • GPS: <b style={{ color: '#fff' }}>{selectedStation.latitude.toFixed(4)}° N, {selectedStation.longitude.toFixed(4)}° E</b> (Central Bengaluru)
+                </span>
+              </div>
+              <a
+                href={`https://www.google.com/maps?q=${selectedStation.latitude},${selectedStation.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12px',
+                  color: 'var(--color-trafo-blue)',
+                  textDecoration: 'none',
+                  fontWeight: 600,
+                }}
+              >
+                <span>View on Google Maps</span>
+                <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+        ) : (
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              backgroundColor: 'var(--color-ink-950)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--color-ink-700)',
+              overflow: 'hidden',
+            }}
+          >
           <svg
             viewBox="0 0 640 370"
             style={{ width: '100%', height: 'auto', display: 'block' }}
@@ -215,6 +316,7 @@ export const ClusterMap: React.FC<ClusterMapProps> = ({
             })}
           </svg>
         </div>
+      )}
 
         {/* Selected Station Drawer Summary */}
         <div
