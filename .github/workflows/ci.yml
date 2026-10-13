@@ -56,7 +56,7 @@ jobs:
       - name: Run test suite
         run: python -m pytest -v
 
-      # Step 7: Deep-model pipeline smoke-test (CPU, 2 days data, 2 epochs)
+      # Step 7: Deep-model pipeline smoke-test (CPU, 10 days data, 1 epoch)
       # Validates imports, data wiring, and forward passes without requiring GPU.
       # Full training (epochs=50) is done in the Colab notebook (notebooks/deep_stgnn_training.ipynb).
       - name: ML model smoke-test
@@ -65,7 +65,7 @@ jobs:
         run: |
           python - <<'EOF'
           from app.ml.deep_train import run_ablation_study
-          result = run_ablation_study(days=2, epochs=2, batch_size=8, seq_len=24, horizon=12, save_dir="../results/ci_smoke")
+          result = run_ablation_study(days=10, epochs=1, batch_size=16, seq_len=24, horizon=12, save_dir="../results/ci_smoke")
           df = result["df_ablation"]
           assert len(df) == 8, f"Expected 8 ablation rows, got {len(df)}"
           assert (df["mae"] >= 0).all(), "Negative MAE detected"
