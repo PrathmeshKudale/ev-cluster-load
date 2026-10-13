@@ -51,7 +51,7 @@ jobs:
           VITE_USE_MOCKS: 'true'
           VITE_API_BASE_URL: ''
           # For GitHub Pages: set base path to repo name
-          VITE_BASE_PATH: ${{ github.repository_owner == github.actor && '/' || format('/{0}/', github.event.repository.name) }}
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

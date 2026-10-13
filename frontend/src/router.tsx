@@ -31,7 +31,7 @@ const RootErrorBoundary: React.FC = () => {
       <PageError
         error={error}
         reset={() => {
-          window.location.href = '/'
+          window.location.href = import.meta.env.BASE_URL || '/'
         }}
       />
     </div>
@@ -104,4 +104,6 @@ export const router = createBrowserRouter([
       },
     ],
   },
-])
+], {
+  basename: import.meta.env.BASE_URL,
+})
