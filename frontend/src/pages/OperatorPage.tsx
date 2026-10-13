@@ -155,7 +155,10 @@ export const OperatorPage: React.FC = () => {
             data={{
               ...transformerFixture,
               loading_percent: riskData?.peak_p90_pct ?? transformerFixture.loading_percent,
+              rating_kva: riskData?.kva ?? 100,
             }}
+            warnThreshold={riskData?.warn_threshold_pct ?? 80}
+            critThreshold={riskData?.crit_threshold_pct ?? 90}
           />
           <AlertFeed />
         </div>

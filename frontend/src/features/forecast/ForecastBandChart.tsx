@@ -79,36 +79,36 @@ export const ForecastBandChart = React.memo(function ForecastBandChart({
     grid: { top: 40, right: 24, bottom: 48, left: 56, containLabel: false },
     tooltip: {
       trigger: 'axis',
-      backgroundColor: 'var(--color-surface-raised)',
-      borderColor: 'var(--color-border)',
-      textStyle: { color: 'var(--color-text-primary)', fontSize: 13 },
-      formatter: (params: Array<{ seriesName: string; value: number; axisValue: number }>) => {
+      backgroundColor: '#0a1f24',
+      borderColor: '#23525d',
+      textStyle: { color: '#e2f1f3', fontSize: 13 },
+      formatter: (params: Array<{ seriesName: string; value: number; axisValue: string }>) => {
         const h = params[0]?.axisValue
         const rows = params
-          .filter(p => p.seriesName !== 'P10-base')
-          .map(p => `<div>${p.seriesName}: <b>${p.value?.toFixed(1)} %</b></div>`)
+          .filter(p => p.seriesName !== 'P10-base' && p.seriesName !== 'Band' && p.seriesName !== 'Thresholds')
+          .map(p => `<div>${p.seriesName}: <b>${p.value != null ? Number(p.value).toFixed(1) : ''}%</b></div>`)
           .join('')
-        return `<div style="font-size:12px"><div style="margin-bottom:4px">Hour ${h}:00</div>${rows}</div>`
+        return `<div style="font-size:12px"><div style="margin-bottom:4px;font-weight:600">Hour ${h}</div>${rows}</div>`
       },
     },
     xAxis: {
       type: 'category',
-      data: ds.hours.map(h => `${h}:00`),
-      axisLabel: { color: 'var(--color-text-muted)', fontSize: 12 },
-      axisLine: { lineStyle: { color: 'var(--color-border)' } },
+      data: ds.hours.map(h => `${String(h).padStart(2, '0')}:00`),
+      axisLabel: { color: '#9bb7bc', fontSize: 12 },
+      axisLine: { lineStyle: { color: '#183e47' } },
       splitLine: { show: false },
     },
     yAxis: {
       type: 'value',
       min: 0,
-      max: 100,
+      max: (value: { max: number }) => Math.max(100, Math.ceil((value.max || 100) * 1.05)),
       axisLabel: {
-        color: 'var(--color-text-muted)',
+        color: '#9bb7bc',
         fontSize: 12,
-        formatter: '{value} %',
+        formatter: '{value}%',
       },
       axisLine: { show: false },
-      splitLine: { lineStyle: { color: 'var(--color-border)', type: 'dashed' } },
+      splitLine: { lineStyle: { color: 'rgba(255, 255, 255, 0.08)', type: 'dashed' } },
     },
     series: [
       // P10 base (hidden, used for band lower bound)
@@ -124,12 +124,12 @@ export const ForecastBandChart = React.memo(function ForecastBandChart({
       {
         name: 'Band',
         type: 'line',
-        data: ds.p90.map((v, i) => v - ds.p10[i]),
+        data: ds.p90.map((v, i) => Math.max(0, v - (ds.p10[i] ?? 0))),
         lineStyle: { opacity: 0 },
         symbol: 'none',
         stack: 'band',
         areaStyle: {
-          color: 'rgba(30,136,229,0.15)',
+          color: 'rgba(30, 136, 229, 0.22)',
           origin: 'auto',
         },
       },
@@ -140,8 +140,8 @@ export const ForecastBandChart = React.memo(function ForecastBandChart({
         data: ds.p50,
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: 'var(--chart-p50)', width: 2.5 },
-        itemStyle: { color: 'var(--chart-p50)' },
+        lineStyle: { color: '#1e88e5', width: 2.5 },
+        itemStyle: { color: '#1e88e5' },
       },
       // P90 upper bound line
       {
@@ -150,8 +150,8 @@ export const ForecastBandChart = React.memo(function ForecastBandChart({
         data: ds.p90,
         smooth: true,
         symbol: 'none',
-        lineStyle: { color: 'var(--color-crit-red)', width: 1.5, type: 'dashed', opacity: 0.7 },
-        itemStyle: { color: 'var(--color-crit-red)' },
+        lineStyle: { color: '#ef4444', width: 1.8, type: 'dashed' },
+        itemStyle: { color: '#ef4444' },
       },
     ],
     // Warning and critical threshold mark lines
@@ -169,21 +169,21 @@ export const ForecastBandChart = React.memo(function ForecastBandChart({
           symbol: ['none', 'none'],
           data: [
             {
-              yAxis: warnThreshold,
-              label: { formatter: `Warn ${warnThreshold}%`, position: 'insideEndTop', fontSize: 11 },
-              lineStyle: { color: 'var(--color-warn-amber)', width: 1.5, type: 'dashed' },
+              yAxis: warn,
+              label: { formatter: `Warn ${warn}%`, position: 'insideEndTop', fontSize: 11, color: '#f59e0b' },
+              lineStyle: { color: '#f59e0b', width: 1.5, type: 'dashed' },
             },
             {
-              yAxis: critThreshold,
-              label: { formatter: `Crit ${critThreshold}%`, position: 'insideEndTop', fontSize: 11 },
-              lineStyle: { color: 'var(--color-crit-red)', width: 1.5, type: 'dashed' },
+              yAxis: crit,
+              label: { formatter: `Crit ${crit}%`, position: 'insideEndTop', fontSize: 11, color: '#ef4444' },
+              lineStyle: { color: '#ef4444', width: 1.5, type: 'dashed' },
             },
           ],
         },
       }
       return { _markLineSeries: markLineSeries }
     })()),
-  }), [ds, warnThreshold, critThreshold])
+  }), [ds, warn, crit])
 
   // Merge the mark line series into the series array
   const mergedOption = useMemo(() => {
