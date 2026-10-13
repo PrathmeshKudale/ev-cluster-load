@@ -132,13 +132,19 @@ def seed_cluster(db: Session) -> Dict[str, int]:
     db.execute(text("DELETE FROM clean.clusters"))
     db.flush()
 
-    # 2. Insert Cluster
+    # 2. Insert Clusters (C1 primary demo cluster, C2 secondary cluster for isolation tests)
     cluster = Cluster(
         id=CLUSTER_ID,
         name="Metro Central Cluster",
         description="4-station urban cluster fed by a 100 kVA distribution transformer",
     )
+    cluster_c2 = Cluster(
+        id="C2",
+        name="North Ring Cluster",
+        description="Secondary satellite cluster for multi-cluster isolation and routing tests",
+    )
     db.add(cluster)
+    db.add(cluster_c2)
 
     # 3. Insert Transformer
     transformer = Transformer(
@@ -311,7 +317,7 @@ def seed_cluster(db: Session) -> Dict[str, int]:
 
     # Collect row counts for validation
     counts = {
-        "clusters": db.query(Cluster).count(),
+        "clusters": db.query(Cluster).filter(Cluster.id == CLUSTER_ID).count(),
         "transformers": db.query(Transformer).count(),
         "stations": db.query(Station).count(),
         "chargers": db.query(Charger).count(),
