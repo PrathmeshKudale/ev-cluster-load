@@ -1,4 +1,17 @@
-.PHONY: test seed migrate migrate-down migrate-check ingest train simulate up down lint
+.PHONY: setup up demo results test seed migrate migrate-down migrate-check ingest train simulate down lint
+
+setup:
+	python -m pip install -r backend/requirements.txt
+	cd frontend && npm install
+
+up:
+	docker compose up --build
+
+demo:
+	cd frontend && npm run demo
+
+results:
+	python scripts/generate_results_md.py
 
 test:
 	cd backend && python -m pytest -q
@@ -23,9 +36,6 @@ train:
 
 simulate:
 	cd backend && python -m app.sim
-
-up:
-	docker compose up --build
 
 down:
 	docker compose down -v

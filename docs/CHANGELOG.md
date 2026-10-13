@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added - feat/z3-docs
+- **README Rewrite with Mermaid Architecture & Evidence Links**:
+  - Rewrote project `README.md` featuring top-line measured results table, Mermaid architecture diagram, 3-command quick start (`make setup`, `make up`, `make demo`), and API overview.
+  - Linked every empirical claim to its backing test, script, or reproducible simulation summary in `results/`.
+- **System Architecture Deep-Dive (`docs/architecture.md`)**:
+  - Created comprehensive architectural guide detailing standards ingestion, AI pipeline, multi-objective optimization, and TimescaleDB persistence layers.
+- **Empirical Results Report & Generator (`docs/results.md`, `scripts/generate_results_md.py`)**:
+  - Implemented `scripts/generate_results_md.py` generating `docs/results.md` directly from `results/sim_summary.json`, `results/backtest.csv`, and `results/ablation.csv`.
+  - Added `make results` target to `Makefile`.
+- **One-Page Executive Brief (`docs/pitch.md`)**:
+  - Structured crisp one-page pitch outlining problem statement, solution mechanics, measured performance numbers, and strategic roadmap.
+
 ### Added - feat/z2-standards
 - **OCPP 1.6J Central System & WebSocket Server**:
   - Implemented OCPP 1.6 JSON-over-WebSocket protocol handler under `/ocpp/{charger_id}` and `/api/v1/ocpp/{charger_id}` with `subprotocols=["ocpp1.6"]`.

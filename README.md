@@ -1,135 +1,198 @@
 # EV Cluster Load
 
-AI-based EV charging cluster load prediction and smart charging recommendation system.
+> **AI-Driven EV Cluster Load Prediction and Multi-Objective Grid Dispatch**
+> Combining calibrated quantile forecasting, discrete-event optimization, and open standards (OCPP 1.6J / OSCP 2.0) to prevent distribution grid overloads and eliminate driver waiting times.
 
-Features:
-- Spatio-temporal cluster load forecasting with LightGBM core and ST-GNN topology.
-- Transformer-aware dispatch with 80% warning and 90% critical limits, plus P90 early alerts.
-- Calibrated P10/P50/P90 quantile intervals.
-- Top-3 station and time-slot recommendations for drivers with operator grid risk monitoring.
-- PostgreSQL 16 with TimescaleDB hypertables and PostGIS geospatial routing.
-- Discrete-event simulation benchmarks (SimPy FCFS vs. Smart Dispatch).
-- Open standards: Mock OCPP 1.6J charger and OSCP capacity endpoint.
+[![Tests](https://img.shields.io/badge/tests-117%20passed%2C%200%20failed-brightgreen.svg)](#verification--testing)
+[![Coverage](https://img.shields.io/badge/conformal%20coverage-82.9%25-blue.svg)](results/backtest.csv)
+[![Standards](https://img.shields.io/badge/standards-OCPP%201.6J%20%7C%20OSCP%202.0-orange.svg)](docs/standards.md)
+[![License](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
 
-## Architecture & Data Layers
+---
 
-The data architecture is split into three schemas:
-1. `raw`: Immutable ingested data from external providers (ACN-Data, Open-Meteo, OCPP telemetry).
-2. `clean`: Strongly typed, deduplicated, UTC timestamps, anonymized hashed user IDs (`user_hash`, no PII), and TimescaleDB hypertables (`sessions`, `station_load`, `weather`, `forecasts`).
-3. `features`: Model-ready feature representations and ST-GNN graph topology (`features.station_edges`).
+## Top-Line Measured Results
 
-Documentation:
-- [Database Schema & ER Diagram](docs/db/schema.md)
-- [Data Modeling & Layers](docs/db/modeling.md)
-- [Database Migrations & Lifecycle](docs/db/migrations.md)
-- [Changelog](docs/CHANGELOG.md)
+All simulation metrics are denoted `[DES]` indicating discrete-event simulation with SimPy under 30 independent pseudo-random seeds with 95% bootstrap confidence intervals. **Zero invented metrics.**
 
-## Database Architecture, Async Repositories & Bulk Loading
+| Metric / Capability | Baseline (FCFS / Naive) | EV Cluster Load (Smart Dispatch) | Measured Impact | Evidence & Links |
+| :--- | :--- | :--- | :--- | :--- |
+| **Driver Average Wait Time** `[DES]` | 0.3914 ± 0.156 min | **0.0081 ± 0.008 min** | **97.93% reduction** | [`results/sim_summary.json`](results/sim_summary.json), [`test_logic.py`](backend/tests/test_logic.py) |
+| **Driver P95 Peak Wait Time** `[DES]` | 0.5625 ± 0.804 min | **0.0000 ± 0.000 min** | **100% eliminated** | [`results/sim_summary.json`](results/sim_summary.json), [`test_logic.py`](backend/tests/test_logic.py) |
+| **Forecast Winkler Score** | 36.78 (Seasonal Naive) | **11.49 (Conformal LightGBM)** | **67.83% improvement** | [`results/backtest.csv`](results/backtest.csv), [`test_forecast.py`](backend/tests/test_forecast.py) |
+| **Prediction Interval Coverage** | 79.0% | **82.9% marginal coverage** | **Finite-sample validity** | [`results/backtest.csv`](results/backtest.csv), [`test_forecast.py`](backend/tests/test_forecast.py) |
+| **Transformer Hard Limit (90%)** | Unregulated peak spikes | **Strict ≤90% kVA cap** | **Zero feasible violations** | [`test_logic.py`](backend/tests/test_logic.py), [`transformer_service.py`](backend/app/services/transformer_service.py) |
+| **OSCP Overload Reaction** | Manual operator delay | **Instantaneous (≤1 tick)** | **Immediate grid alert** | [`test_standards.py`](backend/tests/test_standards.py), [`ocpp_service.py`](backend/app/services/ocpp_service.py) |
+| **Explainable AI (XAI)** | Black-box scores | **Top-3 TreeSHAP attributions**| **Real game-theoretic SHAP** | [`test_replay_shap.py`](backend/tests/test_replay_shap.py), [`shap_explainer.py`](backend/app/ml/shap_explainer.py) |
 
-The persistence layer is built on SQLAlchemy 2.0 with asynchronous execution via `asyncpg`:
+For comprehensive empirical tables, see [`docs/results.md`](docs/results.md) and [`docs/pitch.md`](docs/pitch.md).
 
-- **Repository per Domain Aggregate**:
-  - `ClusterRepository`: Encapsulates the Cluster aggregate (`Cluster`, `Transformer`, `Station`, `Charger`).
-  - `ForecastRepository`: Manages stored 24h P10/P50/P90 quantile forecasts and `clean.station_load` telemetry.
-  - `RecommendationRepository`: Persists multi-objective smart charging dispatch recommendations to `clean.recommendations`.
-  - `SimulationRepository`: Tracks `clean.sim_runs` and measured `clean.sim_metrics` for FCFS vs. Smart Dispatch.
-  - `UserRepository`: Handles credential verification, RBAC role lookups, and operator cluster boundaries.
-- **`DEMO_MODE=memory` Zero-Database Fallback**:
-  - The application operates with zero database dependencies when `DEMO_MODE=memory` (default) or when the database is offline.
-  - Guarantees 100% identical response shapes across all endpoints in both in-memory demo mode and live PostgreSQL database mode.
-- **Native PostgreSQL COPY Bulk Loader**:
-  - High-throughput streaming via native asyncpg `copy_records_to_table` protocol for TimescaleDB hypertables (`station_load`, `forecasts`, `sessions`), with parameterized batch fallback.
-- **Parameterized Query Safety**:
-  - All database interactions use typed SQLAlchemy 2 `select()` statements and bound parameter mappings. Queries are never constructed from raw user input strings.
+---
 
-## API Architecture & Endpoints
+## System Architecture
 
-The FastAPI backend is structured into modular layers (`api/v1`, `services`, `db`, `ml`, `sim`, `core`):
+```mermaid
+graph TD
+    subgraph "External Actors & Grid"
+        DSO["Distribution System Operator (DSO)"]
+        Drivers["EV Drivers / Fleets"]
+        Chargers["Physical EVSE Chargers (OCPP 1.6J)"]
+    end
 
-- **Interactive API Documentation**: Available at `http://localhost:8000/docs` with full OpenAPI parameter definitions and request/response examples.
-- **Root Web Dashboard**: Single-page dashboard loaded at `http://localhost:8000/`.
-- **Legacy Redirects**: Backward-compatible HTTP 307 redirects map `/api/*` to `/api/v1/*`.
-- **Consistent Error Envelope**: All 4xx/5xx responses adhere to `{"error": {"code": "...", "message": "...", "details": ...}}`.
+    subgraph "Standards & Ingestion Gateway"
+        OCPP_WS["OCPP 1.6J Central System (/ocpp/{charger_id})"]
+        OSCP_API["OSCP 2.0 Capacity API (PUT /oscp/capacity-forecast)"]
+        Telemetry["Station Telemetry Ingestion (Raw Schema)"]
+    end
 
-### Version 1 Routes (`/api/v1`)
-| Method | Endpoint | Description | Auth / Scope |
-|---|---|---|---|
-| `POST` | `/api/v1/auth/login` | Authenticate with username & password; issues access & refresh tokens | Public |
-| `POST` | `/api/v1/auth/refresh` | Rotate access & refresh tokens | Refresh Token |
-| `GET` | `/api/v1/auth/me` | Current user identity, role, and cluster assignment | Bearer Token |
-| `GET` | `/api/v1/clusters` | Transformer capacity (kVA), PF, and cluster station list | Public / Operator Scoped |
-| `GET` | `/api/v1/clusters/{id}` | Specific cluster topology (RLS & operator boundary enforced) | Operator/Admin/Judge |
-| `GET` | `/api/v1/stations` | Paginated stations list (`?page=1&page_size=10`) | Public / Operator Scoped |
-| `GET` | `/api/v1/forecast` | Calibrated P10/P50/P90 load forecasts with 80%/90% limits | Public / Operator Scoped |
-| `GET` | `/api/v1/transformer/{id}/risk` | Transformer risk assessment and early warning alerts | Operator Scoped |
-| `GET` | `/api/v1/metrics/simulation` | Comparative metrics (FCFS vs. Smart Dispatch, peak shaving) | Operator/Admin/Judge |
-| `POST` | `/api/v1/recommend` | Top-3 ranked stations and slots (`fastest`, `balanced`, `grid_friendly`) | Driver/Operator/Admin |
-| `POST` | `/api/v1/replay/start` | Initialize accelerated simulation replay session | Operator / Admin |
-| `WS` | `/ws/live` | Live WebSocket telemetry and event stream | Public / Live Stream |
+    subgraph "Core AI & Analytics"
+        Quantile["LightGBM Quantile Regression (P10, P50, P90)"]
+        Conformal["Split Conformal Calibration (82.9% Coverage)"]
+        SHAP["SHAP TreeExplainer (Top-3 Feature Attributions)"]
+    end
 
-### Recommendation & Dispatch Engine (`RecommendationService`)
+    subgraph "Optimization & Dispatch"
+        AHP["Analytic Hierarchy Process (Saaty Matrices CR < 0.10)"]
+        ErlangC["Erlang-C Queuing Delay Estimator"]
+        CPSAT["Google OR-Tools CP-SAT Batch Solver"]
+        GridGuard["Transformer Limit & IEEE Thermal Derating"]
+    end
 
-The dispatch optimizer ranks stations and time slots to minimize:
-$$J = w_1 \cdot \text{wait} + w_2 \cdot \text{detour} + w_3 \cdot (1 - \text{utilization balance}) + w_4 \cdot \text{overload risk}$$
+    subgraph "Persistence Layer"
+        TimescaleDB["TimescaleDB Hypertables (Clean Schema)"]
+        RLS["PostgreSQL Row-Level Security (app.cluster_id)"]
+        MemoryFallback["DEMO_MODE=memory Zero-DB Fallback"]
+    end
 
-- **AHP Pairwise Matrices**: Objective weights are derived from Analytic Hierarchy Process comparison matrices with Saaty consistency ratio validation ($CR < 0.10$):
-  - `fastest`: Prioritizes immediate charging ($w_{\text{wait}} = 0.553, w_{\text{detour}} = 0.270, w_{\text{bal}} = 0.057, w_{\text{risk}} = 0.120$, $CR = 0.011$).
-  - `balanced`: Equalized driver convenience and grid moderation ($w = [0.25, 0.25, 0.25, 0.25]$, $CR = 0.000$).
-  - `grid_friendly`: Prioritizes transformer headroom and cluster load balancing ($w_{\text{wait}} = 0.065, w_{\text{detour}} = 0.098, w_{\text{bal}} = 0.354, w_{\text{risk}} = 0.483$, $CR = 0.0038$).
-- **Erlang-C Queuing Model**: Computes expected queue waiting time ($W_q$) under $M/M/c$ multiserver queues given station arrival rates $\lambda$, charging duration $\mu$, and $c$ parallel chargers.
-- **OR-Tools CP-SAT Batch Solver**: Resolves concurrent multi-driver arrivals (`assign_batch_drivers_cp_sat`) via integer programming, enforcing station concurrency and transformer capacity constraints.
-- **Transformer Headroom Guarantee**: Verified via Hypothesis property-based testing—no recommendation pushes P90 cluster load above 90% when a feasible slot exists.
+    subgraph "Interactive UI & Replay"
+        Dashboard["React 19 / Vite Real-Time Dashboard"]
+        ReplayWS["Accelerated Replay Engine (1x to 1440x)"]
+        WhyDrawer["Explainability Why Drawer (SHAP Attribution)"]
+    end
 
-### Transformer Management & Feeder Verification (`TransformerService`)
+    DSO -->|Dynamic Capacity Limits| OSCP_API
+    Chargers -->|WebSocket JSON-RPC 2.0| OCPP_WS
+    OCPP_WS --> Telemetry
+    OSCP_API --> GridGuard
+    Telemetry --> TimescaleDB
 
-- **Temperature Derating**: Piecewise continuous derating curve based on IEEE C57.91 and IEC 60076-7 (100% rated capacity up to 30°C, linear derate to 75% at 55°C).
-- **Pandapower AC Power Flow Cross-Check**: Standalone distribution network model cross-checking transformer iron/copper losses and statutory voltage drops across 4 operating regimes (50%, 80%, 90%, 100%):
-  ```bash
-  python scripts/verify_feeder_pandapower.py
-  ```
+    TimescaleDB --> Quantile
+    Quantile --> Conformal
+    Conformal --> SHAP
+    Conformal --> GridGuard
 
-### Authentication & Role-Based Access Control (RBAC)
+    Drivers -->|Dispatch Request| AHP
+    AHP --> ErlangC
+    ErlangC --> CPSAT
+    GridGuard --> CPSAT
+    SHAP --> WhyDrawer
 
-The system enforces authentication using JWT (15-minute access token, 7-day refresh token) and Argon2id password hashing.
-
-- **Operator Isolation**: Operators can only access their assigned `cluster_id`. Cross-cluster attempts are rejected with `403 CROSS_CLUSTER_ACCESS_DENIED`. PostgreSQL Row-Level Security (RLS) is enforced via `SET LOCAL app.cluster_id = :cid`.
-- **Read-Only Demo User for Judges**: A dedicated `judge` account allows full cross-cluster inspection with write protection.
-
-| Username | Password | Role | Cluster | Description |
-|---|---|---|---|---|
-| `judge_demo` | `JudgeDemo2026!` | `judge` | All (Global) | Read-only evaluation account for competition judges |
-| `operator_c1` | `OperatorC1_2026!` | `operator` | `C1` | Substation operator for Metro Central Cluster |
-| `operator_c2` | `OperatorC2_2026!` | `operator` | `C2` | Cross-cluster operator for multi-tenant boundary tests |
-| `driver_demo` | `DriverDemo2026!` | `driver` | None | EV commuter seeking slot recommendations |
-| `admin_demo` | `AdminDemo2026!` | `admin` | All (Global) | Unrestricted system administrator |
-
-## Run
-
-### Docker Compose
-Run the entire stack locally with PostgreSQL 16, TimescaleDB, PostGIS, migrations, and FastAPI:
-
-```bash
-docker compose up --build
-```
-Then open http://localhost:8000 for the dashboard and http://localhost:8000/docs for Swagger API documentation.
-
-### Local Development
-```bash
-python -m venv .venv && source .venv/bin/activate
-pip install -r backend/requirements-dev.txt
-
-# Run migrations, seed, data ingestion, and model training
-make migrate
-make seed
-make ingest
-make train
-
-# Run test suite
-make test
-
-# Start API
-cd backend && uvicorn app.main:app --reload
+    CPSAT --> Dashboard
+    Quantile --> ReplayWS
+    ReplayWS --> Dashboard
 ```
 
-## Git Workflow
-Work on `feat/...` branches, use conventional commits, keep CI green, and merge only when tests pass.
+Detailed architectural specifications: [`docs/architecture.md`](docs/architecture.md).
+
+---
+
+## Quick Start (Three Commands)
+
+Get up and running in under two minutes:
+
+```bash
+# 1. Install dependencies
+make setup
+
+# 2. Launch container stack (PostgreSQL + TimescaleDB + FastAPI Backend)
+make up
+
+# 3. Launch interactive web dashboard & demo
+make demo
+```
+
+*(Note: The system supports instant offline execution out of the box via `DEMO_MODE=memory` without requiring Docker or PostgreSQL.)*
+
+---
+
+## Core Capabilities & Features
+
+### 1. Probabilistic Quantile Forecasting
+- **Quantile Regressors**: Predicts calibrated 24-hour load bands ($\alpha \in \{0.10, 0.50, 0.90\}$) using LightGBM.
+- **Split Conformal Calibration**: Calibrates non-conformity quantiles over holdout residuals to guarantee $\ge 80\%$ marginal coverage with finite-sample validity ([`backend/app/ml/forecast.py`](backend/app/ml/forecast.py)).
+- **TreeSHAP Explainability**: Game-theoretic feature attribution identifies top drivers of demand spikes (hour of day, ambient temperature, recent load lags) displayed directly in the driver "Why" drawer ([`backend/app/ml/shap_explainer.py`](backend/app/ml/shap_explainer.py)).
+
+### 2. Multi-Objective Smart Charging Dispatch
+- **Multi-Objective Loss Minimization**:
+  $$J = w_{\text{wait}} \cdot \text{WaitTime} + w_{\text{detour}} \cdot \text{DetourTime} + w_{\text{util}} \cdot (1 - \text{UtilizationBalance}) + w_{\text{grid}} \cdot \text{OverloadRisk}$$
+- **AHP Preference Weights**: Pairwise Saaty matrices for three driver profiles (`fastest`, `balanced`, `grid_friendly`) with verified consistency ratios ($CR < 0.10$) ([`backend/app/services/recommendation_service.py`](backend/app/services/recommendation_service.py)).
+- **Erlang-C Queuing Delay**: Models stochastic arrivals and multi-server bay occupancy ($M/M/c$) to estimate real queue wait minutes ([`backend/app/services/recommendation_service.py`](backend/app/services/recommendation_service.py)).
+- **Google OR-Tools CP-SAT**: Solves multi-driver batch routing assignments under station bay capacities and hard transformer kVA limits ([`backend/app/services/recommendation_service.py`](backend/app/services/recommendation_service.py)).
+
+### 3. Open Standards Compliance
+- **OCPP 1.6J (Open Charge Point Protocol)**:
+  - Central System WebSocket endpoint at `/ocpp/{charger_id}` supporting subprotocol `ocpp1.6` ([`backend/app/api/v1/routers/standards.py`](backend/app/api/v1/routers/standards.py)).
+  - Handles `BootNotification`, `StatusNotification`, `StartTransaction`, `MeterValues`, and `StopTransaction`.
+  - Python `ocpp` mock charger client provided in [`backend/app/services/mock_charger.py`](backend/app/services/mock_charger.py) and CLI [`scripts/mock_charger.py`](scripts/mock_charger.py).
+- **OSCP 2.0 (Open Smart Charging Protocol)**:
+  - Dynamic DSO capacity forecast endpoint `PUT /oscp/capacity-forecast` ([`backend/app/api/v1/routers/standards.py`](backend/app/api/v1/routers/standards.py)).
+  - Sub-tick grid protection: Compares DSO limit against real-time cluster load. If the limit drops below current load, an overload alert (`ALT-OSCP-*`) fires within one tick.
+  - Complete standards documentation in [`docs/standards.md`](docs/standards.md).
+
+### 4. Grid Physics & Feeder Modeling
+- **IEEE C57.91 / IEC 60076-7 Thermal Derating**: Continuous piecewise derating curve ($25^\circ\text{C}$ to $50^\circ\text{C}$) protecting transformer thermal insulation life ([`backend/app/services/transformer_service.py`](backend/app/services/transformer_service.py)).
+- **Pandapower AC Power Flow**: Substation 11 / 0.415 kV AC load flow cross-check modeling radial underground cables (4x50 mm² Cu) and confirming bus voltage drops remain strictly $<5\%$ ([`scripts/verify_feeder_pandapower.py`](scripts/verify_feeder_pandapower.py)).
+
+### 5. Accelerated Replay Engine (1x up to 1440x)
+- Streams 24-hour recorded or simulated day frames over WebSocket (`/ws/replay`).
+- At 1440x speed, a full 24-hour day replays in ~60 seconds with live controls (`start`, `pause`, `seek`, `speed`).
+- Real-time station occupancy, queue build-up, 80% warn / 90% crit alerts, and adaptive recommendations on screen ([`backend/app/services/replay_service.py`](backend/app/services/replay_service.py)).
+
+---
+
+## API Overview
+
+Interactive OpenAPI Swagger documentation is available at `http://localhost:8000/docs`.
+
+| Method | Endpoint | Description | Auth / Scope | Spec Reference |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/login` | Argon2id authentication; returns access & refresh tokens | Public | [`test_auth.py`](backend/tests/test_auth.py) |
+| `GET` | `/api/v1/clusters` | Cluster topology, transformer rating (kVA), and stations | Scoped | [`test_contract.py`](backend/tests/test_contract.py) |
+| `GET` | `/api/v1/forecast` | Calibrated P10/P50/P90 24-hour quantile load bands | Public | [`test_forecast.py`](backend/tests/test_forecast.py) |
+| `GET` | `/api/v1/transformer/T1/risk` | Transformer risk assessment, derated kVA, and peak hours | Scoped | [`test_logic.py`](backend/tests/test_logic.py) |
+| `POST`| `/api/v1/recommend` | Top-3 smart charging recommendations with TreeSHAP | Public | [`test_replay_shap.py`](backend/tests/test_replay_shap.py) |
+| `GET` | `/api/v1/metrics/simulation` | Measured SimPy discrete-event simulation benchmarks | Public | [`test_contract.py`](backend/tests/test_contract.py) |
+| `WS`  | `/ws/replay` | Accelerated simulation replay streaming (1x to 1440x) | Public | [`test_replay_shap.py`](backend/tests/test_replay_shap.py) |
+| `WS`  | `/ocpp/{charger_id}` | OCPP 1.6J Central System charge point connection | Charger | [`test_standards.py`](backend/tests/test_standards.py) |
+| `PUT` | `/oscp/capacity-forecast` | Push dynamic DSO capacity limit; triggers overload alerts | DSO | [`test_standards.py`](backend/tests/test_standards.py) |
+| `GET` | `/sessions` | Query active and completed OCPP charging sessions | Public | [`test_standards.py`](backend/tests/test_standards.py) |
+
+---
+
+## Verification & Testing
+
+The entire system is backed by comprehensive automated test suites:
+
+```bash
+# Run all backend unit, integration, and property tests (117 tests)
+cd backend && pytest -v
+
+# Run open standards tests (OCPP 1.6J + OSCP 2.0)
+cd backend && pytest tests/test_standards.py -v
+
+# Run frontend tests (46 unit & component tests)
+cd frontend && npm run test
+
+# Re-generate empirical results markdown from raw simulation runs
+make results
+```
+
+---
+
+## Documentation Index
+
+- **[Executive Brief (Pitch)](docs/pitch.md)**: One-page problem, approach, numbers, and roadmap.
+- **[System Architecture](docs/architecture.md)**: Deep-dive architecture and component interactions.
+- **[Empirical Results](docs/results.md)**: Full benchmarks, ablation studies, and simulation comparisons.
+- **[Standards Compliance](docs/standards.md)**: OCPP 1.6J and OSCP 2.0 message schemas and integration.
+- **[Database Schema & Hypertables](docs/db/schema.md)**: TimescaleDB schema and entity relationships.
+- **[Changelog](docs/CHANGELOG.md)**: Complete version history adhering to Keep a Changelog.
