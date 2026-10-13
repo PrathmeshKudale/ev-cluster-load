@@ -9,7 +9,18 @@ import { useQueryClient } from '@tanstack/react-query'
 import { patchForecastCache } from './queries'
 import { useUIStore } from '../store/uiStore'
 
-const WS_URL = (import.meta.env.VITE_WS_URL ?? 'ws://localhost:8000/api/v1/ws/live').replace(/\/$/, '')
+function getWsUrl(): string {
+  if (import.meta.env.VITE_WS_URL) {
+    return import.meta.env.VITE_WS_URL.replace(/\/$/, '')
+  }
+  if (typeof window !== 'undefined') {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${proto}//${window.location.host}/api/v1/ws/live`
+  }
+  return 'ws://localhost:8000/api/v1/ws/live'
+}
+
+const WS_URL = getWsUrl()
 
 const MAX_DELAY_MS = 30_000
 const BASE_DELAY_MS = 500
