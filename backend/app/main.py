@@ -112,4 +112,6 @@ def legacy_recommend():
 
 
 # Mount static frontend dashboard
-app.mount("/", StaticFiles(directory=Path(__file__).resolve().parents[2] / "frontend", html=True), name="ui")
+dist_dir = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+ui_dir = dist_dir if dist_dir.exists() else (Path(__file__).resolve().parents[2] / "frontend")
+app.mount("/", StaticFiles(directory=ui_dir, html=True), name="ui")

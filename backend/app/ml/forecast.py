@@ -86,6 +86,9 @@ def compute_forecasts(
         return seasonal_naive_fallback(stations, transformer_kva, power_factor)
 
     try:
+        import app.ml.train as train_mod
+        if "__main__" in sys.modules:
+            setattr(sys.modules["__main__"], "CalibratedQuantileForecaster", train_mod.CalibratedQuantileForecaster)
         forecaster = joblib.load(model_path)
         cap = {s["id"]: s["chargers"] * s["kw"] for s in stations}
         total_cluster_cap = sum(cap.values())
