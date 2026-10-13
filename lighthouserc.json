@@ -2,7 +2,7 @@
   "ci": {
     "collect": {
       "url": ["http://localhost:5173/driver", "http://localhost:5173/operator"],
-      "startServerCommand": "npm run preview --prefix frontend",
+      "startServerCommand": "npm run preview -- --port 5173",
       "startServerReadyPattern": "Local:",
       "numberOfRuns": 3,
       "settings": {

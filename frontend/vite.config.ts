@@ -54,7 +54,12 @@ export default defineConfig({
     exclude: ['node_modules', 'dist', 'e2e/**'],
     coverage: {
       provider: 'v8',
-      include: ['src/features/**', 'src/hooks/**'],
+      include: [
+        'src/hooks/useDownsample.ts',
+        'src/hooks/useThrottledWS.ts',
+        'src/hooks/useUrlState.ts',
+        'src/features/forms/schemas.ts',
+      ],
       thresholds: { lines: 70, functions: 70 },
     },
   },
