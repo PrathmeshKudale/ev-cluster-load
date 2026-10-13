@@ -46,6 +46,7 @@ export const Progress: React.FC<ProgressProps> = ({
       )}
       <div
         role="progressbar"
+        aria-label={label || 'Utilization'}
         aria-valuenow={value}
         aria-valuemin={0}
         aria-valuemax={max}

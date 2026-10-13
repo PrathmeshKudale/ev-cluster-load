@@ -153,6 +153,7 @@ test.describe('Route guard', () => {
     await loginAs(page, 'driver')
     await page.goto(`${BASE}/operator`)
     await page.waitForLoadState('networkidle')
+    await page.waitForURL(/unauthorized|login|driver/, { timeout: 10000 }).catch(() => {})
 
     // Should be redirected to /unauthorized or /login
     const url = page.url()

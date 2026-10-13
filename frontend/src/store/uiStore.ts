@@ -56,16 +56,31 @@ interface UIState {
   clearToast: () => void
 }
 
+const getStoredState = () => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = window.localStorage.getItem('ev-ui-store')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        return parsed.state || parsed
+      }
+    }
+  } catch {}
+  return {}
+}
+
+const initial = getStoredState()
+
 export const useUIStore = create<UIState>()(
   devtools(
     (set) => ({
-      persona: 'driver',
+      persona: initial.persona ?? 'driver',
       setPersona: (p) => set({ persona: p }),
 
-      selectedStationId: 'S1',
+      selectedStationId: initial.selectedStationId ?? 'S1',
       setSelectedStationId: (id) => set({ selectedStationId: id }),
 
-      driverMode: 'balanced',
+      driverMode: initial.driverMode ?? 'balanced',
       setDriverMode: (m) => set({ driverMode: m }),
 
       replaySpeed: 1,
@@ -75,13 +90,13 @@ export const useUIStore = create<UIState>()(
       replayStep: 0,
       setReplayStep: (step) => set({ replayStep: step }),
 
-      accessToken: null,
+      accessToken: initial.accessToken ?? null,
       setAccessToken: (t) => set({ accessToken: t }),
-      userRole: null,
+      userRole: initial.userRole ?? null,
       setUserRole: (r) => set({ userRole: r }),
-      username: null,
+      username: initial.username ?? null,
       setUsername: (u) => set({ username: u }),
-      clusterId: null,
+      clusterId: initial.clusterId ?? null,
       setClusterId: (c) => set({ clusterId: c }),
 
       sidebarOpen: false,

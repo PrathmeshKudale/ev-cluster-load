@@ -110,28 +110,41 @@ def seed_cluster(db: Session) -> Dict[str, int]:
     """Execute deterministic cluster seeding inside an active session."""
     rng = np.random.default_rng(seed=42)
 
-    # 1. Clean existing records for cluster C1 and transformer T1 in reverse dependency order
+    # 1. Clean existing records in reverse dependency order
+    db.execute(text("DELETE FROM clean.recommendations"))
+    db.execute(text("DELETE FROM clean.transformer_risk"))
+    db.execute(text("DELETE FROM clean.sim_metrics"))
+    db.execute(text("DELETE FROM clean.sim_runs"))
+    db.execute(text("DELETE FROM clean.audit_log"))
     db.execute(text("DELETE FROM clean.forecasts"))
     db.execute(text("DELETE FROM clean.sessions"))
     db.execute(text("DELETE FROM clean.station_load"))
     db.execute(text("DELETE FROM clean.weather"))
     db.execute(text("DELETE FROM features.station_edges"))
+    db.execute(text("DELETE FROM features.hourly_cluster_features"))
+    db.execute(text("DELETE FROM clean.users"))
     db.execute(text("DELETE FROM clean.chargers"))
     db.execute(text("DELETE FROM clean.stations"))
     db.execute(text("DELETE FROM clean.config_transformer"))
     db.execute(text("DELETE FROM clean.config_derating_curve"))
     db.execute(text("DELETE FROM clean.config_tod_tariff"))
-    db.execute(text("DELETE FROM clean.transformers WHERE id = :tid"), {"tid": TRANSFORMER_ID})
-    db.execute(text("DELETE FROM clean.clusters WHERE id = :cid"), {"cid": CLUSTER_ID})
+    db.execute(text("DELETE FROM clean.transformers"))
+    db.execute(text("DELETE FROM clean.clusters"))
     db.flush()
 
-    # 2. Insert Cluster
+    # 2. Insert Clusters (C1 primary demo cluster, C2 secondary cluster for isolation tests)
     cluster = Cluster(
         id=CLUSTER_ID,
         name="Metro Central Cluster",
         description="4-station urban cluster fed by a 100 kVA distribution transformer",
     )
+    cluster_c2 = Cluster(
+        id="C2",
+        name="North Ring Cluster",
+        description="Secondary satellite cluster for multi-cluster isolation and routing tests",
+    )
     db.add(cluster)
+    db.add(cluster_c2)
 
     # 3. Insert Transformer
     transformer = Transformer(

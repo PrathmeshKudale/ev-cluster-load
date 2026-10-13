@@ -203,7 +203,13 @@ class UserService:
     def seed_demo_users_to_db(cls, db: Session) -> int:
         """Seed demo users into clean.users table idempotently."""
         count = 0
+        from app.db.models import Cluster
         for dto in _DEMO_USERS.values():
+            cid = dto.cluster_id
+            if cid:
+                cluster_exists = db.query(Cluster).filter(Cluster.id == cid).first()
+                if not cluster_exists:
+                    cid = None
             existing = db.query(User).filter((User.username == dto.username) | (User.user_hash == dto.user_hash)).first()
             if not existing:
                 u = User(
@@ -212,7 +218,7 @@ class UserService:
                     email=dto.email,
                     hashed_password=dto.hashed_password,
                     role=dto.role,
-                    cluster_id=dto.cluster_id,
+                    cluster_id=cid,
                     is_active=dto.is_active,
                 )
                 db.add(u)
@@ -222,7 +228,7 @@ class UserService:
                 existing.email = dto.email
                 existing.hashed_password = dto.hashed_password
                 existing.role = dto.role
-                existing.cluster_id = dto.cluster_id
+                existing.cluster_id = cid
                 existing.is_active = dto.is_active
         db.flush()
         return count

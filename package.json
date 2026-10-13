@@ -1,0 +1,7 @@
+{
+  "name": "ev-cluster-load",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build"
+  }
+}

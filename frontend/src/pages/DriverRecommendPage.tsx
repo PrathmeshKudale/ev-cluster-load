@@ -4,6 +4,8 @@ import { useUIStore, type DriverMode } from '@/store/uiStore'
 import { RecommendationCard } from '@/features/recommend/RecommendationCard'
 import { PageLoader, PageError } from '@/components/PageStates'
 import { recommendationFixture, type CandidateRecommendation } from '@/fixtures/recommendationFixture'
+import { DriverRequestForm } from '@/features/forms/DriverRequestForm'
+import type { DriverRequestValues } from '@/features/forms/schemas'
 import { Zap, Clock, ShieldCheck, Scale } from 'lucide-react'
 
 export const DriverRecommendPage: React.FC = () => {
@@ -17,6 +19,20 @@ export const DriverRecommendPage: React.FC = () => {
   const handleReserve = (rec: CandidateRecommendation) => {
     setReservedStation(rec.station_name)
     showToast(`Bay at ${rec.station_name} confirmed & reserved! Navigation initiated.`, 'success')
+  }
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const handleFormSubmit = async (values: DriverRequestValues) => {
+    setIsSubmitting(true)
+    if (values.priority_mode && values.priority_mode !== driverMode) {
+      setDriverMode(values.priority_mode as DriverMode)
+    }
+    showToast(`Charging request evaluated for ${values.connector_type} (${values.battery_pct}% → ${values.target_pct}%)`, 'info')
+    try {
+      await refetch()
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // AHP weights rigorously derived from Saaty Pairwise Comparison Matrices (CR < 0.10)
@@ -229,6 +245,15 @@ export const DriverRecommendPage: React.FC = () => {
             )
           })}
         </div>
+      </section>
+
+      {/* Driver Charging Request Specification Form */}
+      <section aria-label="Charging Request Specification">
+        <DriverRequestForm
+          onSubmit={handleFormSubmit}
+          isSubmitting={isSubmitting}
+          defaultValues={{ priority_mode: driverMode }}
+        />
       </section>
 
       {/* Step 2: Recommendations Result (Tap 2: View Top Options, Tap 3: Why Drawer) */}
