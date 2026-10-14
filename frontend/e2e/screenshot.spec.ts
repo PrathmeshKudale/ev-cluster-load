@@ -19,6 +19,7 @@
  *
  * Themes: dark (default), light (toggle via localStorage)
  */
+import process from 'node:process'
 import { test, expect } from '@playwright/test'
 import path from 'path'
 import fs from 'fs'

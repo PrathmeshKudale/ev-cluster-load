@@ -8,6 +8,7 @@
  *   - App is served at PLAYWRIGHT_BASE_URL (default http://localhost:5173)
  *   - VITE_USE_MOCKS=true so MSW intercepts all API calls
  */
+import process from 'node:process'
 import { test, expect } from '@playwright/test'
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:5173'

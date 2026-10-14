@@ -4,6 +4,7 @@
  *
  * Run: npx playwright test e2e/accessibility.spec.ts
  */
+import process from 'node:process'
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
